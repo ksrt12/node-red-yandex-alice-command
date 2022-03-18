@@ -5,7 +5,7 @@ module.exports = function (RED) {
 
     this.username = config.username;
     this.password = config.password;
-//    this.token = config.token;
+    //    this.token = config.token;
     this.cookies = config.cookies;
 
     this.scenario_id = config.scenario_id;
@@ -16,21 +16,20 @@ module.exports = function (RED) {
 
     this.closing = false;
 
-    var node = this;
+    let node = this;
 
-//    node.log("Init Yandex Alice Command");
-//    node.log("debug is " + this.debug_enable);
+    //    node.log("Init Yandex Alice Command");
+    //    node.log("debug is " + this.debug_enable);
 
-    node.on("close", function(done)
-    {
+    node.on("close", function (done) {
       node.closing = true;
       done();
     });
   }
 
 
-    RED.nodes.registerType('yandex-alice-login', Alice_Config_Node);
-//    RED.nodes.registerType('yandex-alice-login', Alice_Config_Node, {});
+  RED.nodes.registerType('yandex-alice-login', Alice_Config_Node);
+  //    RED.nodes.registerType('yandex-alice-login', Alice_Config_Node, {});
 
 };
 

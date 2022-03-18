@@ -1,14 +1,12 @@
-var Request = require('request-promise');
-var rp = require('request-promise');
+let rp = require('request-promise');
 
-var NODE_PATH = '/yandex-alice-command/';
+let NODE_PATH = '/yandex-alice-command/';
 
-var y_alice = require('../lib/y_alice.js');
+let y_alice = require('../lib/y_alice.js');
 
-module.exports = function(RED)
-{
+module.exports = function (RED) {
     RED.httpAdmin.get(NODE_PATH + 'static/*', function (req, res) {
-        var options = {
+        let options = {
             root: __dirname + '/static/',
             dotfiles: 'deny'
         };
@@ -16,18 +14,15 @@ module.exports = function(RED)
     });
 
 
-    function Y_Alice_Send(config)
-    {
+    function Y_Alice_Send(config) {
         RED.nodes.createNode(this, config);
 
-//        this.login = RED.nodes.getNode(node.config.login);
         this.login = config.login;
         this.login_node = RED.nodes.getNode(this.login);
         this.command_type = config.command_type;
 
         this.username = this.login_node.username;
         this.password = this.login_node.password;
-//        this.token = this.login_node.token;
         this.cookies = this.login_node.cookies;
         this.speaker_name = this.login_node.speaker_name;
         this.scenario_name = this.login_node.scenario_name;
@@ -35,1036 +30,570 @@ module.exports = function(RED)
         this.scenario_id = this.login_node.scenario_id;
 
         this.debug_enable = this.login_node.debug_enable;
-//        this.debug_enable = true;
 
-
-//this.user = this.login_node.username;
-//this.pass = this.login_node.password;
-
-/*
-        this.username = config.username;
-        this.password = config.password;
-        this.token = config.token;
-        this.cookies = config.cookies;
-        this.speaker_name = config.speaker_name;
-        this.scenario_name = config.scenario_name;
-        this.speaker_id = config.speaker_id;
-        this.scenario_id = config.scenario_id;
-*/
-
-        var node = this;
-//node.log('debug is ' + this.debug_enable);
-
-       function Debug_Log(msg_text)
-       {
-//         if (!node.debug_enable) {return;}
-         node.log(msg_text);
-         var msg = {};
-         msg.payload = msg_text;
-         node.send(msg);
-       }
-
-        node.on('input', function(msg)
-        {
-
-//node.send("login username is " + node.user);
-//node.send("login password is " + node.pass);
-
-          var text = '';
-          var is_cmd = false;
-
-          if (node.command_type == 'tts')
-          {
-            is_cmd = false;
-            text = msg.payload;
-          }
-          else if (node.command_type == 'cmd')
-          {
-            is_cmd = true;
-            text = msg.payload;
-          }
-          else if (node.command_type == 'json')
-          {
-            cmd_data = msg.payload;
-            if (cmd_data.type == 'cmd')
-            {
-              is_cmd = true;
-              text = cmd_data.text;
-            }
-            else if (cmd_data.type == 'tts')
-            {
-              is_cmd = false;
-              text = cmd_data.text;
-            }
-            if (typeof(text) == "undefined" && text == null)
-            {
-              text = 'Ошибка';
-            }
-          }
-
-
-          var is_debug = node.debug_enable;
-          var csrf_token = '';
-
-          var default_scenario = "Голос";
-
-//          var token = node.token;
-          var cookies = node.cookies;
-          var scenario_id = node.scenario_id;
-          var speaker_id = node.speaker_id;
-          var is_speaker_all = false;
-          var speaker_id_all = [];
-          var speaker_name_all = [];
-          var speaker_name = node.speaker_name;
-          var scenario_name = node.scenario_name;
-
-
-          var is_speaker_name_set = false;
-//          var is_token_set = false;
-          var is_cookies_set = false;
-          var is_speaker_set = false;
-          var is_scenario_set = false;
-
-          var is_found_scenario = false;
-
-          var is_speaker_name_all = false;
-
-//          var is_fail_token = false;
-          var is_fail_csrf_token = false;
-          var is_fail_cookies = false;
-          var is_fail_scenario = false;
-          var is_fail_scenario_add = false;
-          var is_fail_scenario_update = false;
-          var is_fail_scenario_run = false;
-          var is_fail_speaker = false;
-
-//          node.send("token is " + token);
-//          node.send("cookies is " + cookies);
-
-/////////////// IF NOT SET TOKEN OR COOKIE : GET IT Begin ////////
-//          if (true)
-/*
-          if (typeof(token) != "undefined" && token !== null)
-          {
-            if (token.length > 0)
-            {
-              is_token_set = true;
-              token = token.replace(new RegExp('"', 'g'), '');
-            }
-          }
-*/
-          if (typeof(cookies) != "undefined" && cookies !== null)
-          {
-            if (cookies.length > 0)
-            {
-              is_cookies_set = true;
-              cookies = cookies.replace(new RegExp('"', 'g'), '');
-            }
-          }
-
-          if (typeof(scenario_id) != "undefined" && scenario_id !== null)
-          {
-            if (scenario_id.length > 0)
-            {
-              is_scenario_set = true;
-              scenario_id = scenario_id.replace(new RegExp('"', 'g'), '');
-              scenario_id = scenario_id.replace(new RegExp(' ', 'g'), '');
-            }
-          }
-
-          if (typeof(speaker_id) != "undefined" && speaker_id !== null)
-          {
-            if (speaker_id.length > 0)
-            {
-              is_speaker_set = true;
-              speaker_id = speaker_id.replace(new RegExp('"', 'g'), '');
-              speaker_id = speaker_id.replace(new RegExp(' ', 'g'), '|');
-              speaker_id = speaker_id.replace(new RegExp(',', 'g'), '|');
-              speaker_id = speaker_id.replace(new RegExp(';', 'g'), '|');
-//              speaker_id = speaker_id.replace(new RegExp(';;', 'g'), '|');
-//                if (is_debug) {Debug_Log("speaker id is ." + speaker_id + ".");}
-
-              speaker_id_all = speaker_id.split('|');
-//                if (is_debug) {Debug_Log("speaker id count ." + speaker_id_all.length + ".");}
-
-/*
-              if (speaker_id.indexOf(',') > -1)
-              {
-                speaker_id_all = speaker_id.split(',');
-              }
-              else if (speaker_id.indexOf('|') > -1)
-              {
-                speaker_id_all = speaker_id.split('|');
-              }
-              else
-              {
-                speaker_id_all = speaker_id.split(';');
-              }
-*/
-//              speaker_id_all.push(speaker_id);
-            }
-          }
-////////////////////// NOW REWORK Speaker id Begin ////////////////
-          var tmp_speaker_id_all = speaker_id_all;
-          speaker_id_all = [];
-          tmp_speaker_id_all.forEach(function(item, i, arr)
-          {
-            if (typeof(item) != "undefined" && item != null)
-            {
-              if (item.length > 0)
-              {
-                speaker_id_all.push(item);
-              }
-            }
-          });
-////////////////////// NOW REWORK Speaker id End ////////////////
-
-
-
-          if (typeof(speaker_name) != "undefined" && speaker_name !== null)
-          {
-            if (speaker_name.length > 0)
-            {
-              is_speaker_name_set = true;
-              speaker_name = speaker_name.replace(new RegExp('"', 'g'), '');
-//              speaker_name = speaker_name.replace(new RegExp(' ', 'g'), '|');
-              speaker_name = speaker_name.replace(new RegExp(',', 'g'), '|');
-              speaker_name = speaker_name.replace(new RegExp(';', 'g'), '|');
-
-
-              speaker_name_all = speaker_name.split('|');
-                if (is_debug) {Debug_Log("speaker name count ." + speaker_name_all.length + ".");}
-/*
-              if (speaker_name.indexOf(',') > -1)
-              {
-                speaker_name_all = speaker_name.split(',');
-              }
-              else if (speaker_name.indexOf('|') > -1)
-              {
-                speaker_name_all = speaker_name.split('|');
-              }
-              else
-              {
-                speaker_name_all = speaker_name.split(';');
-              }
-*/
-//              speaker_name_all.push(speaker_name);
-            }
-            else
-            {
-              is_speaker_name_all = true;
-            }
-          }
-          else
-          {
-            is_speaker_name_all = true;
-          }
-
-////////////////////// NOW REWORK Speaker name Begin ////////////////
-          var tmp_speaker_name_all = speaker_name_all;
-          speaker_name_all = [];
-          tmp_speaker_name_all.forEach(function(item, i, arr)
-          {
-            if (typeof(item) != "undefined" && item != null)
-            {
-              if (item.length > 0)
-              {
-                speaker_name_all.push(item);
-              }
-            }
-          });
-////////////////////// NOW REWORK Speaker name End ////////////////
-
-
-          if (typeof(scenario_name) != "undefined" && scenario_name !== null)
-          {
-            if (scenario_name.length > 0)
-            {
-              scenario_name = scenario_name.replace(new RegExp('"', 'g'), '');
-            }
-            else
-            {
-              scenario_name = default_scenario;
-            }
-          }
-          else
-          {
-            scenario_name = default_scenario;
-          }
-
-
-        node.status({}); //clean
-
-
-        async function make_action()
-        {
-              function redirect_go(body, response, resolveWithFullResponse)
-              {
-                if (is_debug) {Debug_Log("Get cookies: stage 2: begin");}
-//                if (typeof() == "undefined" || body === null)
-                if (response.statusCode != 302)
-                {
-                  is_fail_cookies = true;
-//                  Debug_Log("Get cookies:stage 2: fail " + JSON.stringify(response));
-                  Debug_Log("Get cookies:stage 2: fail " + response.statusCode);
-                  node.status({
-                   fill: "red",
-                    shape: "dot",
-                    text: "Alice:error:cookies:stage 2:"+ response.statusCode
-                  });
-                }
-
-//                node.send(body);
-//                node.send(resolveWithFullResponse);
-                var headers = response.headers;
-//                node.send(headers);
-                cookies = '';
-                headers['set-cookie'].forEach(function(item, i, arr)
-                {
-                  tmp_cookie = item.substring(0, item.indexOf('; ')) + ";";
-//                  node.send("cookie " + i + " is " + tmp_cookie);
-                  cookies += tmp_cookie;
-                });
-//                node.send("full cookies is " + cookies);
-//                node.log("full cookies is " + cookies);
-//                node.log("full cookies response is " + JSON.stringify(response));
-///////////////// SEND MESSAGE IN THIS STRING ///////////
-                if (response.statusCode === 302) {} else {}
-                if (is_debug) {Debug_Log("Get cookies: stage 2: end");}
-              }
-//////// function for get cookie on login end /////
-
-
-/*
-          if (!is_token_set)
-          {
-/////////////// GET MAIN TOKEN Begin //////////////
-          if (is_debug) {Debug_Log("Get token: begin");}
-
-          var encode_username = encodeURIComponent(node.username);
-          var encode_password = encodeURIComponent(node.password);
-
-//          if (is_debug) {Debug_Log("Get token: login string is " + 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password);}
-//          if (is_debug) {Debug_Log("Get token: login string is " + 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + encode_username + '&password=' + encode_password);}
-
-          var options =
-          {
-            method: 'POST',
-            uri: 'https://oauth.yandex.ru/token',
-            body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + encode_username + '&password=' + encode_password,
-//            body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password,
-             headers: {
-            },
-            resolveWithFullResponse: true,
-            json: false // Automatically stringifies the body to JSON
-          };
-
-
-          await rp(options) /////// get token
-          .then(function (body)
-          {
-            var data = JSON.parse(body.body);
-            token = data.access_token;
-            if (is_debug) {Debug_Log("Get token: ok");}
-//            if (is_debug) {Debug_Log("get token - ok : " + token);}
-//            node.send(token);
-
-//            node.send("TRY GET COOKIES with token " + token);
-          })
-          .catch(function (err) {
-          is_fail_token = true;
-          Debug_Log("Get token: fail " + err);
-          node.status({
-            fill: "red",
-            shape: "dot",
-            text: "Alice:error:token:" + err
-          });
-
-//          if (err.indexOf('login or password is not valid') > -1) {Debug_Log('Login or password is not valid');}
-//          if (err.error_description.indexOf('login or password is not valid') > -1) {Debug_Log('Login or password is not valid');}
-        });
-/////////////// GET MAIN TOKEN End //////////////
-}
-*/
-//          if (!is_cookies_set && !is_fail_token)
-          if (!is_cookies_set)
-          {
-
-          if (is_debug) {Debug_Log("Get cookies: begin");}
-
-
-//Debug_Log("Get cookies: begin, pass is " + node.password + ", encoded " + encodeURIComponent(node.password));
-
-/////////////// GET COOKIES Begin //////////////
-            var passport_host = '';
-            var track_id = '';
-            var options =
-            {
-              method: 'POST',
-//              uri: 'https://registrator.mobile.yandex.net/1/bundle/auth/x_token/',
-              uri: 'https://passport.yandex.ru/passport?mode=auth&retpath=https://yandex.ru',
-//              body: 'type=' + 'x-token' + '&retpath=' + 'https://www.yandex.ru/androids.txt',
-//              body: 'login=' + node.username + '&passwd=' + node.password,
-              body: 'login=' + node.username + '&passwd=' + encodeURIComponent(node.password),
-              headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token
-              },
-              resolveWithFullResponse: true,
-              json: false, // Automatically stringifies the body to JSON
-                followRedirect: false,
-                followAllRedirects : false,
-                transform: redirect_go
-            };
-
-
-            await rp(options)
-            .then(function (body)
-            {
-              var data_2 = JSON.parse(body.body);
-              passport_host = data_2.passport_host;
-              track_id = data_2.track_id;
-//            node.send(token);
-//              node.send("get cookie - status : " + cookie_data.status);
-//              node.send(body);
-            })
-            .catch(function (err) {
-//              is_fail_cookies = true;
-//              Debug_Log("Get cookies: fail " + err);
-//              node.status({
-//                fill: "red",
-//                shape: "dot",
-//                text: "Alice:error:cookies:fail"
-//              });
-//              node.send("get cookie - fail " + err);
-            });
-
-/*
-              if (is_debug) {Debug_Log("Get cookies: stage 2: begin");}
-              var options =
-              {
-                method: 'POST',
-                uri: passport_host + '/auth/session/' + '?track_id=' + track_id,
-//                body: 'type=' + 'x-token' + '&retpath=' + 'https://www.yandex.ru/androids.txt',
-                headers: {
-                   'Content-type' : 'application/x-www-form-urlencoded',
-                   'Ya-Consumer-Authorization' : 'OAuth ' + token
-                },
-                resolveWithFullResponse: true,
-                json: false, // Automatically stringifies the body to JSON
-                followRedirect: false,
-                followAllRedirects : false,
-                transform: redirect_go
-              };
-
-
-              await rp(options)
-              .then(function (body)
-              {
-                var cookie_2_data = JSON.parse(body.body);
-//              passport_host = cookie_data.passport_host;
-//              track_id = cookie_data.track_id;
-//            node.send(token);
-//              node.send("get cookie stage 2 - status : ");
-//              node.send(body);
-
-
-              })
-              .catch(function (err) {
-//                node.send(body);
-//                node.send("get cookie stage 2  - fail " + err);
-              });
-*/
-/////////////// GET COOKIES End //////////////
-          }
-/////////////// IF NOT SET TOKEN OR COOKIE : GET IT End ////////
-
-
-/////////////// GET CSRF TOKEN Begin //////////////
-          if (!is_fail_cookies)
-          {
-            if (is_debug) {Debug_Log("Get csrf token: begin");}
-            var options =
-            {
-//              method: 'POST',
-              uri: 'https://yandex.ru/quasar/iot',
-//              body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password,
-              headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token,
-                 'Cookie' : cookies
-              },
-              resolveWithFullResponse: true,
-              json: false // Automatically stringifies the body to JSON
-            };
-
-            await rp(options) ///// get csrf
-            .then(function (body)
-            {
-//              var data = JSON.parse(body.body);
-//              token = data.access_token;
-              if (is_debug) {Debug_Log("Get csrf token: ok");}
-              tmp_body = body.body;
-              tmp_csrf_token = tmp_body.substring(tmp_body.indexOf('"csrfToken2":"'));
-              tmp_csrf_token = tmp_csrf_token.substring(tmp_csrf_token.indexOf('":"'), tmp_csrf_token.indexOf('","'));
-/// this for all subsrt replace
-              tmp_csrf_token = tmp_csrf_token.replace(new RegExp('":"', 'g'), '');
-//             tmp_csrf_token = tmp_csrf_token.replace('":"','');
-              csrf_token = tmp_csrf_token;
-//              node.send("csrf token is " + csrf_token);
-
-//              node.send(body);
-//node.send(body.body);
-            })
-            .catch(function (err)
-            {
-              node.send(err);
-              is_fail_csrf_token = true;
-              if (is_debug) {Debug_Log("Get csrf token: fail " + err);}
-              node.status({
-                fill: "red",
-                shape: "dot",
-                text: "Alice:error:csrf token:" + err
-              });
-              return;
-            });
-          }
-/////////////// GET CSRF TOKEN End //////////////
-
-
-
-
-
-//          node.send(msg);
-
-
-          if (!is_speaker_set && !is_fail_cookies)
-          {////// begin work with devices
-            var devices_data = '';
-/////////////// GET devices Begin //////////////
-            if (is_debug) {Debug_Log("Get devices: begin");}
-            var options =
-            {
-//              method: 'POST',
-              uri: 'https://iot.quasar.yandex.ru/m/user/devices',
-//              body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password,
-              headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token,
-                 'Cookie' : cookies
-              },
-              resolveWithFullResponse: true,
-              json: false // Automatically stringifies the body to JSON
-            };
-
-            await rp(options) ///// get devices
-            .then(function (body)
-            {
-              if (is_debug) {Debug_Log("Get devices: ok");}
-//              node.send(body);
-              devices_data = JSON.parse(body.body);
-            })
-            .catch(function (err)
-            {
-              node.send(err);
-              is_fail_speaker = true;
-              if (is_debug) {Debug_Log("Get devices: fail " + err);}
-              node.status({
-                fill: "red",
-                shape: "dot",
-                text: "Alice:error:devices:" + err
-              });
-            });
-/////////////// GET devices End //////////////
-
-/////////////// GET Search SPEAKER Begin //////////////
-//        if (device_data.rooms.length > 0)
-
-        if (typeof(devices_data.rooms) != "undefined" && devices_data.rooms != null && !is_fail_speaker)
-        {
-          devices_data.rooms.forEach(function(item, i, arr)
-          {
-//          node.send("room " + i + " name is " + item.name);
-            room_devices = item.devices;
-            room_devices.forEach(function(device_item, i, arr)
-            {
-              if (device_item.type.indexOf("devices.types.smart_speaker") > -1 || device_item.type.indexOf("yandex.module") > -1)
-              {
-                if (is_speaker_name_set)
-                {
-                  speaker_name_all.forEach(function(sp_item, sp_i, sp_arr)
-                  {
-//                    if (device_item.name.indexOf(sp_item) > -1)
-                    if (device_item.name == sp_item)
-                    {
-                      if (is_debug) {Debug_Log("Get devices: found named speaker " + device_item.name + ", id: " + device_item.id);}
-//                      node.send("found NAMED spekaer is " + device_item.name);
-                      speaker_id = device_item.id;
-                      speaker_id_all.push(speaker_id);
-                    }
-                  });
-
-                }
-                else
-                {
-//                node.send("found speaker is " + device_item.name);
-                  speaker_id = device_item.id;
-                  speaker_id_all.push(speaker_id);
-                  if (is_debug) {Debug_Log("Get devices: found speaker " + device_item.name + ", id: " + device_item.id);}
-                }
-              }
-            });
-          });
-
-
-        }
-        else
-        {
-          if (is_debug) {Debug_Log("Get devices: error: no devices in account");}
-        }
-
-        if (typeof(devices_data.speakers) != "undefined" && devices_data.speakers != null && !is_fail_speaker)
-        {
-//          devices_data.rooms.forEach(function(item, i, arr)
-//          {
-//          node.send("room " + i + " name is " + item.name);
-//            room_devices = item.devices;
-            devices_data.speakers.forEach(function(device_item, i, arr)
-            {
-              if (device_item.type.indexOf("devices.types.smart_speaker") > -1 || device_item.type.indexOf("yandex.module") > -1)
-              {
-                if (is_speaker_name_set)
-                {
-                  speaker_name_all.forEach(function(sp_item, sp_i, sp_arr)
-                  {
-//                    if (device_item.name.indexOf(sp_item) > -1)
-                    if (device_item.name == sp_item)
-                    {
-                      if (is_debug) {Debug_Log("Get devices: found named speaker " + device_item.name + ", id: " + device_item.id);}
-//                      node.send("found NAMED spekaer is " + device_item.name);
-                      speaker_id = device_item.id;
-                      speaker_id_all.push(speaker_id);
-                    }
-                  });
-
-                }
-                else
-                {
-//                node.send("found speaker is " + device_item.name);
-                  speaker_id = device_item.id;
-                  speaker_id_all.push(speaker_id);
-                  if (is_debug) {Debug_Log("Get devices: found speaker " + device_item.name + ", id: " + device_item.id);}
-                }
-              }
-//            });
-          });
-
-
-        }
-        else
-        {
-          if (is_debug) {Debug_Log("Get devices: error: no devices in account");}
-        }
-////         node.send("room is " + devices.rooms[0].name);
-/////////////// GET Search SPEAKER End //////////////
-
-/////////////// GET VERIFY SPEAKER Begin //////////////
-          if (typeof(speaker_id) == "undefined" || speaker_id == null)
-          {
-            is_fail_speaker = true;
-            if (is_debug) {Debug_Log("Get devices: error: no speakers in account");}
+        let node = this;
+        //node.log('debug is ' + this.debug_enable);
+
+        const Debug_Log = msg_text => {
+            //         if (!node.debug_enable) {return;}
+            node.log(msg_text);
+            let msg = {};
+            msg.payload = msg_text;
+            node.send(msg);
+        };
+
+        const SetError = (str) => {
             node.status({
-              fill: "red",
-              shape: "dot",
-              text: "Alice:error:no speaker"
-            });
-          }
-          else if (speaker_id.length < 2)
-          {
-            is_fail_speaker = true;
-            if (is_debug) {Debug_Log("Get devices: error: no speaker in account");}
-            node.status({
-              fill: "red",
-              shape: "dot",
-              text: "Alice:error:no speaker"
-            });
-          }
-/////////////// GET VERIFY SPEAKER End //////////////
-         }//// end work with devices
-
-
-
-          if (!is_scenario_set && !is_fail_cookies)
-          {
-            var scenarios_data = '';
-/////////////// GET scenarios Begin //////////////
-            if (is_debug) {Debug_Log("Get scenarios: begin");}
-            var options =
-            {
-//              method: 'POST',
-              uri: 'https://iot.quasar.yandex.ru/m/user/scenarios',
-//              body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password,
-              headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token,
-                 'Cookie' : cookies
-              },
-              resolveWithFullResponse: true,
-              json: false // Automatically stringifies the body to JSON
-            };
-
-            await rp(options) ///// get scenarios
-            .then(function (body)
-            {
-//              var data = JSON.parse(body.body);
-              if (is_debug) {Debug_Log("Get scenarios: ok");}
-//              node.send(body);
-              scenarios_data = JSON.parse(body.body);
-            })
-            .catch(function (err)
-            {
-              node.send(err);
-              is_fail_scenario = true;
-              if (is_debug) {Debug_Log("Get scenarios: fail " + err);}
-              node.status({
                 fill: "red",
                 shape: "dot",
-                text: "Alice:error:get:scenarios:" + err
-              });
+                text: str
             });
-/////////////// GET scenarios End //////////////
-/////////////// GET Search SCENARIO Begin //////////////
-        if (typeof(scenarios_data.scenarios) != "undefined" && scenarios_data.scenarios != null && !is_fail_scenario)
-        {
-          scenarios_data.scenarios.forEach(function(item, i, arr)
-          {
-//            node.send("scenarios " + i + " name is " + item.name);
-//            if (item.name.indexOf(scenario_name) > -1)
-            if (item.name == scenario_name)
-            {
-//              node.send("found scenario is " + item.name);
-              scenario_id = item.id;
-              is_found_scenario = true;
+        };
+
+        node.on('input', function (msg) {
+            let text = '';
+            let is_cmd = false;
+
+            switch (node.command_type) {
+                case 'tts':
+                    is_cmd = false;
+                    text = msg.payload;
+                    break;
+                case 'cmd':
+                    is_cmd = true;
+                    text = msg.payload;
+                    break;
+                case 'json':
+                    let cmd_data = msg.payload;
+                    if (cmd_data.type == 'cmd') {
+                        is_cmd = true;
+                        text = cmd_data.text;
+                    }
+                    else if (cmd_data.type == 'tts') {
+                        is_cmd = false;
+                        text = cmd_data.text;
+                    }
+                    break;
+                default:
+                    text = 'Ошибка';
+
             }
-          });
-        }
-        else
-        {
-          if (is_debug) {Debug_Log("Get scenarios: no scenarios in account");}
-        }
 
-////         node.send("room is " + devices.rooms[0].name);
-/////////////// GET Search SCENARIO End //////////////
-
-/////////////// GET ADD SCENARIO Begin //////////////
-           if (is_found_scenario)
-           {
-             if (is_debug) {Debug_Log("Get scenarios: found scenario ID is " + scenario_id);}
-           }
-           else
-           {
-              if (is_debug) {Debug_Log("Add scenario: begin");}
-
-              var send_data = {};
-//              send_data.push(new Object());
-              send_data.name = scenario_name;
-              send_data.icon = new String('home');
-              send_data.triggers = new Array();
-              send_data.triggers.push(new Object());
-              send_data.triggers[0].type = new String('scenario.trigger.voice');
-              send_data.triggers[0].value = scenario_name;
-
-//              send_data.trigger_type = new String('scenario.trigger.voice');
-              send_data.devices = new Array();
-              send_data.external_actions = new Array();
-              send_data.external_actions.push(new Object());
-              send_data.external_actions[0].type = new String('scenario.external_action.phrase');
-              send_data.external_actions[0].parameters = {};
-              send_data.external_actions[0].parameters.current_device = new Boolean(false);
-              send_data.external_actions[0].parameters.device_id = new String(speaker_id);
-              send_data.external_actions[0].parameters.phrase = new String('-');
-//              node.send(send_data);
-              send_data_str = JSON.stringify(send_data);
-//              node.send("to send : " + send_data_str);
-
-              var options =
-              {
-                method: 'POST',
-                uri: 'https://iot.quasar.yandex.ru/m/user/scenarios/',
-                body: send_data_str,
-//                body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password,
-
-                headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token,
-                 'x-csrf-token' : csrf_token,
-                 'Cookie' : cookies
-                },
-                resolveWithFullResponse: true,
-                json: false // Automatically stringifies the body to JSON
-              };
-
-              await rp(options) ///// add scenario
-              .then(function (body)
-              {
-//              var data = JSON.parse(body.body);
-                if (is_debug) {Debug_Log("Add scenarios: ok");}
-//                node.send(body);
-//                scenarios_data = JSON.parse(body.body);
-              })
-              .catch(function (err)
-              {
-//                node.send(err);
-                is_fail_scenario_add = true;
-                if (is_debug) {Debug_Log("Add scenarios: fail " + err);}
-                node.status({
-                  fill: "red",
-                  shape: "dot",
-                  text: "Alice:error:add:scenarios:" + err
-                });
-              });
-/////////////// ADD scenarios End //////////////
-/////////////// GET Search SCENARIO Begin //////////////
-        if (typeof(scenarios_data.scenarios) != "undefined" && scenarios_data.scenarios != null && !is_fail_scenario_add)
-        {
-          scenarios_data.scenarios.forEach(function(item, i, arr)
-          {
-//            node.send("scenarios " + i + " name is " + item.name);
-//            if (item.name.indexOf(scenario_name) > -1)
-            if (item.name == scenario_name)
-            {
-//              node.send("found scenario is " + item.name);
-              scenario_id = item.id;
-              is_found_scenario = true;
+            if (typeof (text) == "undefined" && text == null) {
+                text = 'Ошибка';
             }
-          });
-        }
-        else
-        {
-          node.send("scenario fail");
-        }
-
-           }
-/////////////// GET ADD SCENARIO End //////////////
-
-         }
 
 
+            let is_debug = node.debug_enable;
+            let csrf_token = '';
+
+            //  let token = node.token;
+            let cookies = node.cookies;
+            let scenario_id = node.scenario_id;
+            let speaker_id = node.speaker_id;
+            let speaker_id_all = [];
+            let speaker_name_all = [];
+            let speaker_name = node.speaker_name;
+            let scenario_name = node.scenario_name.replace(new RegExp('"', 'g'), '') || "Голос";
 
 
-////////////////////// NOW SEND COMMAND Begin ////////////////
-            if (!is_fail_cookies && speaker_id.length > 0 && scenario_id.length > 0 && !is_fail_speaker && !is_fail_scenario && speaker_id_all.length > 0)
-            {
-              if (is_debug) {Debug_Log("Execute command: begin");}
+            let is_speaker_name_set = false;
+            //  let is_token_set = false;
+            let is_cookies_set = false;
+            let is_speaker_set = false;
+            let is_scenario_set = false;
 
-              var action = 'phrase';
-              if (is_cmd)
-              {
-                action = 'text';
-                new_action = 'text_action';
-              }
-              else
-              {
-                action = 'phrase';
-                new_action = 'phrase_action';
-              }
+            let is_found_scenario = false;
 
-              var send_data = {};
-              send_data.name = scenario_name;
-              send_data.icon = new String('home');
-//              send_data.trigger_type = new String('scenario.trigger.voice');
-              send_data.triggers = new Array();
-              send_data.triggers.push(new Object());
-              send_data.triggers[0].type = new String('scenario.trigger.voice');
-              send_data.triggers[0].value = scenario_name;
+            let is_speaker_name_all = false;
 
+            //  let is_fail_token = false;
+            let is_fail_cookies = false;
+            let is_fail_scenario = false;
+            let is_fail_scenario_add = false;
+            let is_fail_speaker = false;
 
-send_data.steps = new Array();
-          send_data.steps.push(new Object());
-          send_data.steps[0].type = new String("scenarios.steps.actions");
-          send_data.steps[0].parameters = new Object()
-          send_data.steps[0].parameters.requested_speaker_capabilities = new Array();
-          send_data.steps[0].parameters.launch_devices = new Array();
+            // node.send("token is " + token);
+            // node.send("cookies is " + cookies);
 
-          speaker_id_all.forEach(function (item, i, arr) {
-            if (is_debug) { Debug_Log("Execute command: add speaker id ." + item + "."); }
-            send_data.steps[0].parameters.launch_devices.push(new Object());
-            send_data.steps[0].parameters.launch_devices[i].id = new String(item);
-            send_data.steps[0].parameters.launch_devices[i].capabilities = new Array();
-            send_data.steps[0].parameters.launch_devices[i].capabilities.push(new Object());
-            send_data.steps[0].parameters.launch_devices[i].capabilities[0].type = new String("devices.capabilities.quasar.server_action");
-            send_data.steps[0].parameters.launch_devices[i].capabilities[0].state = new Object();
-            send_data.steps[0].parameters.launch_devices[i].capabilities[0].state.instance = new String(new_action);
-            send_data.steps[0].parameters.launch_devices[i].capabilities[0].state.value = new String(text);
-            //                  send_data.external_actions.push(new Object());
-            //                  send_data.external_actions[i].type = new String('scenario.external_action.' + action);
-            //                  send_data.external_actions[i].parameters = {};
-            //                  send_data.external_actions[i].parameters.current_device = new Boolean(false);
-            ////                  send_data.external_actions[speaker_num].parameters.device_id = new String(speaker_id);
-            //                  send_data.external_actions[i].parameters.device_id = new String(item);
-            //                  if (is_cmd)
-            //                  {
-            //                    send_data.external_actions[i].parameters.text = new String(text);
-            //                  }
-            //                  else
-            //                  {
-            //                    send_data.external_actions[i].parameters.phrase = new String(text);
-            //                  }
-          });
-
-/*
-              send_data.requested_speaker_capabilities = new Array();
-              send_data.devices = new Array();
-//              send_data.external_actions = new Array();
-              speaker_id_all.forEach(function(item, i, arr)
-              {
-                  if (is_debug) {Debug_Log("Execute command: add speaker id ." + item + ".");}
-                  send_data.devices.push(new Object());
-                  send_data.devices[i].id =  new String(item);
-
-                  send_data.devices[i].capabilities = new Array();
-                  send_data.devices[i].capabilities.push(new Object());
-                  send_data.devices[i].capabilities[0].type = new String("devices.capabilities.quasar.server_action");
-                  send_data.devices[i].capabilities[0].state = new Object();
-                  send_data.devices[i].capabilities[0].state.instance = new String(new_action);
-                  send_data.devices[i].capabilities[0].state.value = new String(text);
-//                  send_data.external_actions.push(new Object());
-//                  send_data.external_actions[i].type = new String('scenario.external_action.' + action);
-//                  send_data.external_actions[i].parameters = {};
-//                  send_data.external_actions[i].parameters.current_device = new Boolean(false);
-////                  send_data.external_actions[speaker_num].parameters.device_id = new String(speaker_id);
-//                  send_data.external_actions[i].parameters.device_id = new String(item);
-//                  if (is_cmd)
-//                  {
-//                    send_data.external_actions[i].parameters.text = new String(text);
-//                  }
-//                  else
-//                  {
-//                    send_data.external_actions[i].parameters.phrase = new String(text);
-//                  }
-              });
-*/
-
-
-
-              send_data_str = JSON.stringify(send_data);
-//              node.send(send_data);
-//              node.send("to send : " + send_data_str);
-
-              var options =
-              {
-                method: 'PUT',
-                uri: 'https://iot.quasar.yandex.ru/m/user/scenarios/' + scenario_id,
-                body: send_data_str,
-//                body: 'client_secret=' + y_alice.client_secret + '&client_id=' + y_alice.client_id + '&grant_type=' + 'password' + '&username=' + node.username + '&password=' + node.password,
-
-                headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token,
-                 'x-csrf-token' : csrf_token,
-                 'Cookie' : cookies
-                },
-                resolveWithFullResponse: true,
-                json: false // Automatically stringifies the body to JSON
-              };
-
-              await rp(options) ///// change scenario
-              .then(function (body)
-              {
-//              var data = JSON.parse(body.body);
-                if (is_debug) {Debug_Log("Execute command: update scenario: ok");}
-//                node.send(body);
-//                scenarios_data = JSON.parse(body.body);
-              })
-              .catch(function (err)
-              {
-//                node.send(err);
-                is_fail_scenario_update = true;
-                if (is_debug) {Debug_Log("Execute command: upadate scenario: fail " + err);}
-                node.status({
-                  fill: "red",
-                  shape: "dot",
-                  text: "Alice:error:update:scenarios:" + err
-                });
-              });
-
-              var options =
-              {
-                method: 'POST',
-                uri: 'https://iot.quasar.yandex.ru/m/user/scenarios/' + scenario_id + '/actions',
-                body: send_data_str,
-                headers: {
-                 'Content-type' : 'application/x-www-form-urlencoded',
-//                 'Ya-Consumer-Authorization' : 'OAuth ' + token,
-                 'x-csrf-token' : csrf_token,
-                 'Cookie' : cookies
-                },
-                resolveWithFullResponse: true,
-                json: false // Automatically stringifies the body to JSON
-              };
-
-              await rp(options) ///// change scenario
-              .then(function (body)
-              {
-//              var data = JSON.parse(body.body);
-                if (is_debug) {Debug_Log("Execute command: run scenario: ok");}
-                node.status({
-                    fill: "green",
-                    shape: "dot",
-                    text: "Alice:ok"
-                });
-
-//                node.send(body);
-//                scenarios_data = JSON.parse(body.body);
-              })
-              .catch(function (err)
-              {
-//                node.send(err);
-                is_fail_scenario_run = true;
-                if (is_debug) {Debug_Log("Execute command: run scenario: fail " + err);}
-                node.status({
-                  fill: "red",
-                  shape: "dot",
-                  text: "Alice:error:run:scenarios:" + err
-                });
-              });
-            }
-////////////////////// NOW SEND COMMAND End ////////////////
-
-
-
-///////////////// SEND DATA Begin ///////////
-
-                if (!is_cookies_set || !is_speaker_set || !is_scenario_set)
-                {
-                  if (!is_fail_cookies && !is_fail_scenario && !is_fail_speaker)
-                  {
-                    if (is_debug) {Debug_Log("Show all data: ok");}
-//                    msg.token = token;
-                    msg.cookies = cookies;
-                    msg.speaker_id = speaker_id;
-                    msg.speaker_id_all = speaker_id_all;
-                    msg.scenario_id = scenario_id;
-                    msg.payload = '{"cookies":"' + cookies + '"}';
-//                    msg.payload = '{"token":"' + token + '","cookies":"' + cookies + '"}';
-                    node.send(msg);
-                  }
+            /////////////// IF NOT SET TOKEN OR COOKIE : GET IT Begin ////////
+            if (cookies) {
+                if (cookies.length > 0) {
+                    is_cookies_set = true;
+                    cookies = cookies.replace(new RegExp('"', 'g'), '');
                 }
-///////////////// SEND DATA End ///////////
+            }
+
+            if (scenario_id) {
+                if (scenario_id.length > 0) {
+                    is_scenario_set = true;
+                    scenario_id = scenario_id.replace(new RegExp('"', 'g'), '');
+                    scenario_id = scenario_id.replace(new RegExp(' ', 'g'), '');
+                }
+            }
+
+            if (speaker_id) {
+                if (speaker_id.length > 0) {
+                    is_speaker_set = true;
+                    speaker_id = speaker_id
+                        .replace(new RegExp('"', 'g'), '')
+                        .replace(new RegExp(' ', 'g'), '|')
+                        .replace(new RegExp(',', 'g'), '|')
+                        .replace(new RegExp(';', 'g'), '|');
+                    if (is_debug) { Debug_Log("Speaker id is " + speaker_id); }
+
+                    speaker_id_all = speaker_id.split('|').filter(i => i.length > 0);
+                }
+            }
+
+            if (speaker_name) {
+                if (speaker_name.length > 0) {
+                    is_speaker_name_set = true;
+                    speaker_name = speaker_name
+                        .replace(new RegExp('"', 'g'), '')
+                        .replace(new RegExp(',', 'g'), '|')
+                        .replace(new RegExp(';', 'g'), '|');
+
+                    speaker_name_all = speaker_name.split('|').filter(i => i.length > 0);
+                    if (is_debug) { Debug_Log("speaker name count ." + speaker_name_all.length + "."); }
+                } else {
+                    is_speaker_name_all = true;
+                }
+            } else {
+                is_speaker_name_all = true;
+            }
+
+            node.status({}); //clean
 
 
-     }////////////// end of acync
+            async function make_action() {
+                function redirect_go(body, response, resolveWithFullResponse) {
+                    if (is_debug) { Debug_Log("Get cookies: stage 2: begin"); }
+                    //                if (typeof() == "undefined" || body === null)
+                    if (response.statusCode != 302) {
+                        is_fail_cookies = true;
+                        //                  Debug_Log("Get cookies:stage 2: fail " + JSON.stringify(response));
+                        Debug_Log("Get cookies:stage 2: fail " + response.statusCode);
+                        SetError("Alice:error:cookies:stage 2:" + response.statusCode);
+                    }
+
+                    let headers = response.headers;
+                    //                node.send(headers);
+                    cookies = '';
+                    headers['set-cookie'].forEach(function (item, i, arr) {
+                        tmp_cookie = item.substring(0, item.indexOf('; ')) + ";";
+                        //                  node.send("cookie " + i + " is " + tmp_cookie);
+                        cookies += tmp_cookie;
+                    });
+                    ///////////////// SEND MESSAGE IN THIS STRING ///////////
+                    if (response.statusCode === 302) { } else { }
+                    if (is_debug) { Debug_Log("Get cookies: stage 2: end"); }
+                }
+                //////// function for get cookie on login end /////
+
+
+                if (!is_cookies_set) {
+
+                    if (is_debug) { Debug_Log("Get cookies: begin"); }
+
+
+                    //Debug_Log("Get cookies: begin, pass is " + node.password + ", encoded " + encodeURIComponent(node.password));
+
+                    /////////////// GET COOKIES Begin //////////////
+                    let passport_host = '';
+                    let track_id = '';
+                    let options = {
+                        method: 'POST',
+                        uri: 'https://passport.yandex.ru/passport?mode=auth&retpath=https://yandex.ru',
+                        body: 'login=' + node.username + '&passwd=' + encodeURIComponent(node.password),
+                        headers: {
+                            'Content-type': 'application/x-www-form-urlencoded',
+                        },
+                        resolveWithFullResponse: true,
+                        json: false, // Automatically stringifies the body to JSON
+                        followRedirect: false,
+                        followAllRedirects: false,
+                        transform: redirect_go
+                    };
+
+
+                    await rp(options)
+                        .then(body => {
+                            let data_2 = JSON.parse(body.body);
+                            passport_host = data_2.passport_host;
+                            track_id = data_2.track_id;
+                            //            node.send(token);
+                            //              node.send("get cookie - status : " + cookie_data.status);
+                            //              node.send(body);
+                        })
+                        .catch(err => {
+                            //              is_fail_cookies = true;
+                            //              Debug_Log("Get cookies: fail " + err);
+                            //              node.status({
+                            //                fill: "red",
+                            //                shape: "dot",
+                            //                text: "Alice:error:cookies:fail"
+                            //              });
+                            //              node.send("get cookie - fail " + err);
+                        });
+
+                    /////////////// GET COOKIES End //////////////
+                }
+                /////////////// IF NOT SET TOKEN OR COOKIE : GET IT End ////////
+
+
+                /////////////// GET CSRF TOKEN Begin //////////////
+                if (!is_fail_cookies) {
+                    if (is_debug) { Debug_Log("Get csrf token: begin"); }
+                    let options = {
+                        uri: 'https://yandex.ru/quasar/iot',
+                        headers: {
+                            'Content-type': 'application/x-www-form-urlencoded',
+                            'Cookie': cookies
+                        },
+                        resolveWithFullResponse: true,
+                        json: false // Automatically stringifies the body to JSON
+                    };
+
+                    await rp(options) ///// get csrf
+                        .then(body => {
+                            if (is_debug) { Debug_Log("Get csrf token: ok"); }
+                            let tmp_body = body.body;
+                            let start_index = tmp_body.indexOf('"csrfToken2":"') + 14;
+                            csrf_token = tmp_body.slice(start_index, start_index + 51);
+                        })
+                        .catch(err => {
+                            node.send(err);
+                            if (is_debug) { Debug_Log("Get csrf token: fail " + err); }
+                            SetError("Alice:error:csrf token:" + err);
+                            return;
+                        });
+                }
+                /////////////// GET CSRF TOKEN End //////////////
+
+                ////// begin work with devices
+                if (!is_speaker_set && !is_fail_cookies) {
+                    let devices_data = '';
+                    /////////////// GET devices Begin //////////////
+                    if (is_debug) { Debug_Log("Get devices: begin"); }
+                    let options = {
+                        uri: 'https://iot.quasar.yandex.ru/m/user/devices',
+                        headers: {
+                            'Content-type': 'application/x-www-form-urlencoded',
+                            'Cookie': cookies
+                        },
+                        resolveWithFullResponse: true,
+                        json: false // Automatically stringifies the body to JSON
+                    };
+
+                    await rp(options) ///// get devices
+                        .then(body => {
+                            if (is_debug) { Debug_Log("Get devices: ok"); }
+                            //              node.send(body);
+                            devices_data = JSON.parse(body.body);
+                        })
+                        .catch(err => {
+                            node.send(err);
+                            is_fail_speaker = true;
+                            if (is_debug) { Debug_Log("Get devices: fail " + err); }
+                            SetError("Alice:error:devices:" + err);
+                        });
+                    /////////////// GET devices End //////////////
+
+                    /////////////// GET Search SPEAKER Begin //////////////
+                    if (devices_data) {
+
+                        const checkDevice = (device) => {
+                            if (device.type.includes("devices.types.smart_speaker") || device.type.includes("yandex.module")) {
+                                if (is_speaker_name_set) {
+                                    speaker_name_all.forEach(speaker => {
+                                        if (device.name == speaker) {
+                                            if (is_debug) { Debug_Log("Get devices: found named speaker " + device.name + ", id: " + device.id); }
+                                            speaker_id_all.push(device.id);
+                                        }
+                                    });
+                                } else {
+                                    speaker_id_all.push(device.id);
+                                    if (is_debug) { Debug_Log("Get devices: found speaker " + device.name + ", id: " + device.id); }
+                                }
+                            }
+                        };
+
+                        if (devices_data.rooms && !is_fail_speaker) {
+                            devices_data.rooms.forEach(room => {
+                                room.devices.forEach(device => checkDevice(device));
+                            });
+                        } else {
+                            if (is_debug) { Debug_Log("Get devices: error: no devices in account"); }
+                        }
+
+                        if (devices_data.speakers && !is_fail_speaker) {
+                            devices_data.speakers.forEach(device => checkDevice(device));
+                        } else {
+                            if (is_debug) { Debug_Log("Get devices: error: no speakers in account"); }
+                        }
+                    }
+                    /////////////// GET Search SPEAKER End //////////////
+
+                    /////////////// GET VERIFY SPEAKER Begin //////////////
+                    if (speaker_id_all.length == 0) {
+                        is_fail_speaker = true;
+                        if (is_debug) { Debug_Log("Get devices: error: no speakers in account"); }
+                        SetError("Alice:error:no speaker");
+                    }
+                    /////////////// GET VERIFY SPEAKER End //////////////
+                }//// end work with devices
+
+
+
+                if (!is_scenario_set && !is_fail_cookies) {
+                    let scenarios_data = '';
+                    /////////////// GET scenarios Begin //////////////
+                    if (is_debug) { Debug_Log("Get scenarios: begin"); }
+                    let options = {
+                        uri: 'https://iot.quasar.yandex.ru/m/user/scenarios',
+                        headers: {
+                            'Content-type': 'application/x-www-form-urlencoded',
+                            'Cookie': cookies
+                        },
+                        resolveWithFullResponse: true,
+                        json: false // Automatically stringifies the body to JSON
+                    };
+
+                    await rp(options) ///// get scenarios
+                        .then(body => {
+                            scenarios_data = JSON.parse(body.body);
+                            if (is_debug) { Debug_Log("Get scenarios: " + scenarios_data.status); }
+
+                        })
+                        .catch(err => {
+                            node.send(err);
+                            is_fail_scenario = true;
+                            if (is_debug) { Debug_Log("Get scenarios: fail " + err); }
+                            SetError("Alice:error:get:scenarios:" + err);
+                        });
+                    /////////////// GET scenarios End //////////////
+
+                    /////////////// GET Search SCENARIO Begin //////////////
+                    if (scenarios_data.scenarios && !is_fail_scenario) {
+                        scenarios_data.scenarios.forEach(scenario => {
+                            if (scenario.name == scenario_name) {
+                                scenario_id = scenario.id;
+                                is_found_scenario = true;
+                            }
+                        });
+                    } else {
+                        if (is_debug) { Debug_Log("Get scenarios: no scenarios in account"); }
+                    }
+                    /////////////// GET Search SCENARIO End //////////////
+
+                    /////////////// GET ADD SCENARIO Begin //////////////
+                    if (is_found_scenario) {
+                        if (is_debug) { Debug_Log("Get scenarios: found scenario ID is " + scenario_id); }
+                    } else {
+                        if (is_debug) { Debug_Log("Add scenario: begin"); }
+
+                        let send_data = {
+                            "name": scenario_name,
+                            "icon": "home",
+                            "triggers": [
+                                {
+                                    "type": "scenario.trigger.voice",
+                                    "value": scenario_name
+                                }
+                            ],
+                            "steps": [
+                                {
+                                    "type": "scenarios.steps.actions",
+                                    "parameters": {
+                                        "launch_devices": [
+                                            {
+                                                "id": speaker_id,
+                                                "capabilities": [
+                                                    {
+                                                        "type": "devices.capabilities.quasar",
+                                                        "state": {
+                                                            "instance": "text_action",
+                                                            "value": text
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "requested_speaker_capabilities": []
+                                    }
+                                }
+                            ]
+                        };
+
+                        let options = {
+                            method: 'POST',
+                            uri: 'https://iot.quasar.yandex.ru/m/user/scenarios/',
+                            body: JSON.stringify(send_data),
+                            headers: {
+                                'Content-type': 'application/x-www-form-urlencoded',
+                                'x-csrf-token': csrf_token,
+                                'Cookie': cookies
+                            },
+                            resolveWithFullResponse: true,
+                            json: false // Automatically stringifies the body to JSON
+                        };
+
+                        await rp(options) ///// add scenario
+                            .then(body => {
+                                let data = JSON.parse(body.body);
+                                if (is_debug) { Debug_Log("Add scenarios: " + data.status); }
+                                Debug_Log(data);
+                            })
+                            .catch(err => {
+                                is_fail_scenario_add = true;
+                                if (is_debug) { Debug_Log("Add scenarios: fail " + err); }
+                                SetError("Alice:error:add:scenarios:" + err);
+                            });
+                        /////////////// ADD scenarios End //////////////
+
+                        /////////////// GET Search SCENARIO Begin //////////////
+                        if (scenarios_data.scenarios && !is_fail_scenario_add) {
+                            scenarios_data.scenarios.forEach(scenario => {
+                                if (scenario.name == scenario_name) {
+                                    scenario_id = scenario.id;
+                                    is_found_scenario = true;
+                                }
+                            });
+                        } else {
+                            node.send("scenario fail");
+                        }
+
+                    }
+                    /////////////// GET ADD SCENARIO End //////////////
+
+                }
 
 
 
 
+                ////////////////////// NOW SEND COMMAND Begin ////////////////
+                if (!is_fail_cookies            // cookies ok
+                    && speaker_id.length > 0    // speaker exist
+                    && scenario_id.length > 0   // scenario exist
+                    && !is_fail_speaker         // speaker ok
+                    && !is_fail_scenario        // scenario ok
+                    && speaker_id_all.length > 0 // all speakrs ok
+                ) {
+                    if (is_debug) { Debug_Log("Execute command: begin"); }
+
+                    let send_data = {
+                        "name": scenario_name,
+                        "icon": "home",
+                        "triggers": [
+                            {
+                                "type": "scenario.trigger.voice",
+                                "value": scenario_name
+                            }
+                        ],
+                        "steps": [
+                            {
+                                "type": "scenarios.steps.actions",
+                                "parameters": {
+                                    "launch_devices": [
+                                        {
+                                            "id": speaker_id,
+                                            "capabilities": []
+                                        }
+                                    ],
+                                    "requested_speaker_capabilities": []
+                                }
+                            }
+                        ]
+                    };
+
+                    send_data.steps[0].parameters.launch_devices[0].capabilities = (is_cmd)
+                        ? [
+                            ////////// SET CMD ACTION //////////
+                            {
+                                "type": "devices.capabilities.quasar.server_action",
+                                "state": {
+                                    "instance": "text_action",
+                                    "value": text
+                                }
+                            }
+                        ]
+                        : [
+                            ////////// SET TTS ACTION //////////
+                            {
+                                "type": "devices.capabilities.quasar",
+                                "state": {
+                                    "instance": "tts",
+                                    "value": {
+                                        "text": text
+                                    }
+                                }
+                            }
+                        ];
+
+                    ////////////////////// PUT NEW COMMAND Begin ////////////////
+                    let options = {
+                        method: 'PUT',
+                        uri: 'https://iot.quasar.yandex.ru/m/user/scenarios/' + scenario_id,
+                        body: JSON.stringify(send_data),
+                        headers: {
+                            'Content-type': 'application/x-www-form-urlencoded',
+                            'x-csrf-token': csrf_token,
+                            'Cookie': cookies
+                        },
+                        resolveWithFullResponse: true,
+                        json: false // Automatically stringifies the body to JSON
+                    };
+
+                    await rp(options) ///// change scenario
+                        .then(body => {
+                            let data = JSON.parse(body.body);
+                            if (is_debug) { Debug_Log("Execute command: update scenario: " + data.status); }
+
+                            ////////////////////// EXEC NEW COMMAND Begin ////////////////
+                            await rp({
+                                method: 'POST',
+                                uri: 'https://iot.quasar.yandex.ru/m/user/scenarios/' + scenario_id + '/actions',
+                                headers: {
+                                    'Content-type': 'application/x-www-form-urlencoded',
+                                    'x-csrf-token': csrf_token,
+                                    'Cookie': cookies
+                                }
+                            });
+                            ////////////////////// EXEC NEW COMMAND End ////////////////
+                        })
+                        .catch(err => {
+                            if (is_debug) { Debug_Log("Execute command: upadate scenario: fail " + err); }
+                            SetError("Alice:error:update:scenarios:" + err);
+                        });
+                }
+                ////////////////////// NOW SEND COMMAND End ////////////////
 
 
-    make_action().then();
+
+                ///////////////// SEND DATA Begin ///////////
+
+                if (!is_cookies_set || !is_speaker_set || !is_scenario_set) {
+                    if (!is_fail_cookies && !is_fail_scenario && !is_fail_speaker) {
+                        //if (is_debug) { Debug_Log("Show all data: ok"); }
+                        //                    msg.token = token;
+                        msg.cookies = cookies;
+                        msg.speaker_id = speaker_id;
+                        msg.speaker_id_all = speaker_id_all;
+                        msg.scenario_id = scenario_id;
+                        node.send(msg);
+                    }
+                }
+                ///////////////// SEND DATA End ///////////
+
+
+            }////////////// end of acync
+
+            make_action().then();
 
         }); //// end node
 
     }
 
     RED.nodes.registerType("alice-send", Y_Alice_Send);
-}
+};
