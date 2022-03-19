@@ -1,35 +1,33 @@
 {
-  "name": "node-red-contrib-yandex-alice-command",
-  "node-red": {
-    "nodes": {
-      "alice-send": "nodes/alice-send.js",
-      "alice-login": "nodes/alice-login.js"
+    "name": "node-red-contrib-yandex-alice-command",
+    "node-red": {
+        "nodes": {
+            "alice-send": "nodes/alice-send.js",
+            "alice-login": "nodes/alice-login.js"
+        }
+    },
+    "keywords": [
+        "node-red",
+        "yandex-alice-command",
+        "mqtt"
+    ],
+    "bugs": {
+        "url": "https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command/issues/"
+    },
+    "homepage": "https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command.git"
+    },
+    "version": "1.1",
+    "description": "yandex-alice-command system",
+    "main": "yandex-alice-command.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Anton Tumilovich",
+    "license": "GPL",
+    "dependencies": {
+        "node-fetch": "^2.6.7"
     }
-  },
-  "keywords": [
-    "node-red",
-    "yandex-alice-command",
-    "mqtt"
-  ],
-  "bugs": {
-    "url": "https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command/issues/"
-  },
-  "homepage": "https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command.git"
-  },
-  "version": "1.0.20",
-  "description": "yandex-alice-command system",
-  "main": "yandex-alice-command.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Anton Tumilovich",
-  "license": "GPL",
-  "dependencies": {
-    "request": "^2.88.2",
-    "request-promise": "^4.2.5",
-    "request-promise-native": "^1.0.8"
-  }
 }
