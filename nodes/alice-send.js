@@ -13,7 +13,6 @@ module.exports = function (RED) {
         res.sendFile(req.params[0], options);
     });
 
-
     function Y_Alice_Send(config) {
         RED.nodes.createNode(this, config);
 
@@ -108,9 +107,6 @@ module.exports = function (RED) {
             let is_fail_scenario_add = false;
             let is_fail_speaker = false;
 
-            // node.send("token is " + token);
-            // node.send("cookies is " + cookies);
-
             /////////////// IF NOT SET TOKEN OR COOKIE : GET IT Begin ////////
             if (cookies) {
                 if (cookies.length > 0) {
@@ -135,7 +131,7 @@ module.exports = function (RED) {
                         .replace(new RegExp(' ', 'g'), '|')
                         .replace(new RegExp(',', 'g'), '|')
                         .replace(new RegExp(';', 'g'), '|');
-                    if (is_debug) { Debug_Log("Speaker id is " + speaker_id); }
+                    if (is_debug) Debug_Log("Speaker id is " + speaker_id);
 
                     speaker_id_all = speaker_id.split('|').filter(i => i.length > 0);
                 }
@@ -150,7 +146,7 @@ module.exports = function (RED) {
                         .replace(new RegExp(';', 'g'), '|');
 
                     speaker_name_all = speaker_name.split('|').filter(i => i.length > 0);
-                    if (is_debug) { Debug_Log("speaker name count ." + speaker_name_all.length + "."); }
+                    if (is_debug) Debug_Log("speaker name count ." + speaker_name_all.length + ".");
                 } else {
                     is_speaker_name_all = true;
                 }
@@ -160,10 +156,9 @@ module.exports = function (RED) {
 
             node.status({}); //clean
 
-
             async function make_action() {
                 /*function redirect_go(body, response, resolveWithFullResponse) {
-                    if (is_debug) { Debug_Log("Get cookies: stage 2: begin"); }
+                    if (is_debug) Debug_Log("Get cookies: stage 2: begin");
                     if (response.statusCode != 302) {
                         is_fail_cookies = true;
                         Debug_Log("Get cookies:stage 2: fail " + response.statusCode);
@@ -179,14 +174,13 @@ module.exports = function (RED) {
                     });
                     ///////////////// SEND MESSAGE IN THIS STRING ///////////
                     if (response.statusCode === 302) { } else { }
-                    if (is_debug) { Debug_Log("Get cookies: stage 2: end"); }
+                    if (is_debug) Debug_Log("Get cookies: stage 2: end");
                 } */
                 //////// function for get cookie on login end /////
 
-
                 if (!is_cookies_set) {
 
-                    if (is_debug) { Debug_Log("Get cookies: begin"); }
+                    if (is_debug) Debug_Log("Get cookies: begin");
 
                     /////////////// GET COOKIES Begin //////////////
                     await fetch("https://passport.yandex.ru/passport?mode=auth&retpath=https://yandex.ru",
@@ -207,10 +201,9 @@ module.exports = function (RED) {
                 }
                 /////////////// IF NOT SET TOKEN OR COOKIE : GET IT End ////////
 
-
                 /////////////// GET CSRF TOKEN Begin //////////////
                 if (!is_fail_cookies) {
-                    if (is_debug) { Debug_Log("Get csrf token: begin"); }
+                    if (is_debug) Debug_Log("Get csrf token: begin");
                     await fetch("https://yandex.ru/quasar/iot",
                         {
                             method: "GET",
@@ -219,7 +212,7 @@ module.exports = function (RED) {
                         })
                         .catch(err => {
                             node.send(err);
-                            if (is_debug) { Debug_Log("Get csrf token: fail " + err); }
+                            if (is_debug) Debug_Log("Get csrf token: fail " + err);
                             SetError("Alice:error:csrf token:" + err);
                             return;
                         })
@@ -230,16 +223,15 @@ module.exports = function (RED) {
                             csrf_token = res.slice(start_index, start_index + 51);
                         });
                 }
+                if (is_debug) Debug_Log("csrf_token: " + csrf_token);
                 /////////////// GET CSRF TOKEN End //////////////
-
-                if (is_debug) { Debug_Log("csrf_token: " + csrf_token); }
 
                 ////// begin work with devices
                 let devices_data = '';
                 if (!is_speaker_set && !is_fail_cookies) {
 
                     /////////////// GET devices Begin //////////////
-                    if (is_debug) { Debug_Log("Get devices: begin"); }
+                    if (is_debug) Debug_Log("Get devices: begin");
                     await fetch("https://iot.quasar.yandex.ru/m/user/devices",
                         {
                             method: "GET",
@@ -249,26 +241,26 @@ module.exports = function (RED) {
                         .catch(err => {
                             node.send(err);
                             is_fail_speaker = true;
-                            if (is_debug) { Debug_Log("Get devices: fail " + err); }
+                            if (is_debug) Debug_Log("Get devices: fail " + err);
                             SetError("Alice:error:devices:" + err);
                         })
                         .then(req => req.json())
                         .then(res => {
                             devices_data = res;
-                            if (is_debug) { Debug_Log("Get devices: ok"); }
+                            if (is_debug) Debug_Log("Get devices: ok");
                         });
                     /////////////// GET devices End //////////////
 
                     /////////////// GET Search SPEAKER Begin //////////////
                     if (devices_data) {
-                        if (is_debug) { Debug_Log("Devices exist"); }
+                        if (is_debug) Debug_Log("Devices exist");
 
                         const checkDevice = (device) => {
                             if (device.type.includes("devices.types.smart_speaker") || device.type.includes("yandex.module")) {
                                 if (is_speaker_name_set) {
                                     speaker_name_all.forEach(speaker => {
                                         if (device.name == speaker) {
-                                            if (is_debug) { Debug_Log("Get devices: found named speaker " + device.name + ", id: " + device.id); }
+                                            if (is_debug) Debug_Log("Get devices: found named speaker " + device.name + ", id: " + device.id);
                                             speaker_id_all.push(device.id);
                                             speaker_id = device.id;
                                         }
@@ -276,23 +268,24 @@ module.exports = function (RED) {
                                 } else {
                                     speaker_id_all.push(device.id);
                                     speaker_id = device.id;
-                                    if (is_debug) { Debug_Log("Get devices: found speaker " + device.name + ", id: " + device.id); }
+                                    if (is_debug) Debug_Log("Get devices: found speaker " + device.name + ", id: " + device.id);
                                 }
                             }
                         };
 
+                        // Search in rooms
                         if (devices_data.rooms && !is_fail_speaker) {
                             devices_data.rooms.forEach(room => {
                                 room.devices.forEach(device => checkDevice(device));
                             });
                         } else {
-                            if (is_debug) { Debug_Log("Get devices: error: no devices in account"); }
+                            if (is_debug) Debug_Log("Get devices: error: no devices in account");
                         }
-
+                        // Search in speakers
                         if (devices_data.speakers && !is_fail_speaker) {
                             devices_data.speakers.forEach(device => checkDevice(device));
                         } else {
-                            if (is_debug) { Debug_Log("Get devices: error: no speakers in account"); }
+                            if (is_debug) Debug_Log("Get devices: error: no speakers in account");
                         }
                     }
                     /////////////// GET Search SPEAKER End //////////////
@@ -300,18 +293,18 @@ module.exports = function (RED) {
                     /////////////// GET VERIFY SPEAKER Begin //////////////
                     if (speaker_id_all.length == 0) {
                         is_fail_speaker = true;
-                        if (is_debug) { Debug_Log("Get devices: error: no speakers in account"); }
+                        if (is_debug) Debug_Log("Get devices: error: no speakers in account");
                         SetError("Alice:error:no speaker");
                     }
                     /////////////// GET VERIFY SPEAKER End //////////////
-                }//// end work with devices
+                }
+                ////// end work with devices
 
-
-
+                /////////////// scenarios Begin //////////////
                 if (!is_scenario_set && !is_fail_cookies) {
                     let scenarios_data = '';
                     /////////////// GET scenarios Begin //////////////
-                    if (is_debug) { Debug_Log("Get scenarios: begin"); }
+                    if (is_debug) Debug_Log("Get scenarios: begin");
                     await fetch("https://iot.quasar.yandex.ru/m/user/scenarios",
                         {
                             method: "GET",
@@ -321,13 +314,13 @@ module.exports = function (RED) {
                         .catch(err => {
                             node.send(err);
                             is_fail_scenario = true;
-                            if (is_debug) { Debug_Log("Get scenarios: fail " + err); }
+                            if (is_debug) Debug_Log("Get scenarios: fail " + err);
                             SetError("Alice:error:get:scenarios:" + err);
                         })
                         .then(req => req.json())
                         .then(res => {
                             scenarios_data = res;
-                            if (is_debug) { Debug_Log("Get scenarios: ok"); }
+                            if (is_debug) Debug_Log("Get scenarios: ok");
                         });
                     /////////////// GET scenarios End //////////////
 
@@ -340,15 +333,15 @@ module.exports = function (RED) {
                             }
                         });
                     } else {
-                        if (is_debug) { Debug_Log("Get scenarios: no scenarios in account"); }
+                        if (is_debug) Debug_Log("Get scenarios: no scenarios in account");
                     }
                     /////////////// GET Search SCENARIO End //////////////
 
                     /////////////// GET ADD SCENARIO Begin //////////////
                     if (is_found_scenario) {
-                        if (is_debug) { Debug_Log("Get scenarios: found scenario ID is " + scenario_id); }
+                        if (is_debug) Debug_Log("Get scenarios: found scenario ID is " + scenario_id);
                     } else {
-                        if (is_debug) { Debug_Log("Add scenario: begin"); }
+                        if (is_debug) Debug_Log("Add scenario: begin");
 
                         let send_data = {
                             "name": scenario_name,
@@ -395,38 +388,31 @@ module.exports = function (RED) {
                             })
                             .catch(err => {
                                 is_fail_scenario_add = true;
-                                if (is_debug) { Debug_Log("Add scenarios: fail " + err); }
+                                if (is_debug) Debug_Log("Add scenarios: fail " + err);
                                 SetError("Alice:error:add:scenarios:" + err);
                             })
                             .then(req => req.json())
                             .then(res => {
                                 scenario_id = res.scenario_id;
-                                if (is_debug) { Debug_Log("Add scenarios: ok"); }
+                                if (is_debug) Debug_Log("Add scenarios: ok");
                             });
 
                         /////////////// ADD scenarios End //////////////
                     }
                     /////////////// GET ADD SCENARIO End //////////////
                 }
-
-
-
+                /////////////// scenarios End //////////////
 
                 ////////////////////// NOW SEND COMMAND Begin ////////////////
-                if (is_debug) { Debug_Log("Execute command: begin"); }
-                // if (is_debug) { Debug_Log(!is_fail_cookies); }
-                // if (is_debug) { Debug_Log(speaker_id.length > 0); }
-                // if (is_debug) { Debug_Log(scenario_id.length > 0); }
-                // if (is_debug) { Debug_Log(!is_fail_speaker); }
-                // if (is_debug) { Debug_Log(!is_fail_scenario); }
-                // if (is_debug) { Debug_Log(speaker_id_all.length > 0); }
-                if (!is_fail_cookies            // cookies ok
-                    && speaker_id.length > 0    // speaker exist
-                    && scenario_id.length > 0   // scenario exist
-                    && !is_fail_speaker         // speaker ok
-                    && !is_fail_scenario        // scenario ok
-                    && speaker_id_all.length > 0 // all speakrs ok
-                ) {
+                if (is_debug) Debug_Log("Execute command: begin");
+                // if (is_debug) Debug_Log(!is_fail_cookies);
+                // if (is_debug) Debug_Log(speaker_id.length > 0);
+                // if (is_debug) Debug_Log(scenario_id.length > 0);
+                // if (is_debug) Debug_Log(!is_fail_speaker);
+                // if (is_debug) Debug_Log(!is_fail_scenario);
+                // if (is_debug) Debug_Log(speaker_id_all.length > 0);
+
+                if (!is_fail_cookies && speaker_id.length > 0 && scenario_id.length > 0 && !is_fail_speaker && !is_fail_scenario && speaker_id_all.length > 0) {
 
                     let send_data = {
                         "name": scenario_name,
@@ -486,13 +472,13 @@ module.exports = function (RED) {
                             body: JSON.stringify(send_data),
                         })
                         .catch(err => {
-                            if (is_debug) { Debug_Log("Execute command: update scenario: fail " + err); }
+                            if (is_debug) Debug_Log("Execute command: update scenario: fail " + err);
                             SetError("Alice:error:update:scenarios:" + err);
                         })
-                        .then(req => req.json())
-                        .then(res => {
-                            if (is_debug) { Debug_Log("Execute command: update scenario: ok"); }
+                        .then(() => {
+                            if (is_debug) Debug_Log("Execute command: update scenario: ok");
                         });
+                    ////////////////////// PUT NEW COMMAND End ////////////////
 
                     ////////////////////// EXEC NEW COMMAND Begin ////////////////
                     await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/actions", {
@@ -505,13 +491,10 @@ module.exports = function (RED) {
                 }
                 ////////////////////// NOW SEND COMMAND End ////////////////
 
-
-
                 ///////////////// SEND DATA Begin ///////////
-
                 if (!is_cookies_set || !is_speaker_set || !is_scenario_set) {
                     if (!is_fail_cookies && !is_fail_scenario && !is_fail_speaker) {
-                        if (is_debug) { Debug_Log("Show all data: ok"); }
+                        if (is_debug) Debug_Log("Show all data: ok");
                         msg.cookies = cookies;
                         msg.speaker_id = speaker_id;
                         msg.speaker_id_all = speaker_id_all;
@@ -520,7 +503,6 @@ module.exports = function (RED) {
                     }
                 }
                 ///////////////// SEND DATA End ///////////
-
 
             }////////////// end of acync
 
