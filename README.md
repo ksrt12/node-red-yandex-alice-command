@@ -50,11 +50,15 @@ Changes in version 1.19 11/05/21:
 * Fixed spec chars in password   
   
   
+Changes in version 1.20 12/03/22:  
+* Fixed for scenario new API   
+  
+  
   
 THNAKS TO:  
 * https://github.com/AlexxIT/YandexStation  
 * https://github.com/sergejey/majordomo-yadevices  
-  
+* Artem https://github.com/guinmoon
   
 Если вам понравился проект - линк для благодарностей https://yasobe.ru/na/ya_alice_command  
   
@@ -63,9 +67,6 @@ THNAKS TO:
 <img src="http://wiki.swiitch.ru/images/d/d0/Node_red_yandex_alice_get_token.png">
 <img src="http://wiki.swiitch.ru/images/c/c1/Node_red_yandex_alice_settings.png">
 <img src="http://wiki.swiitch.ru/images/8/8c/Node_red_yandex_alice_login.png">
-  
-  
-  
   
   
   
