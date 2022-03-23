@@ -90,12 +90,10 @@ module.exports = function (RED) {
             let is_cookies_set = false;
             let is_speaker_set = false;
             let is_scenario_set = false;
-            let is_found_scenario = false;
 
             //  let is_fail_token = false;
             let is_fail_cookies = false;
             let is_fail_scenario = false;
-            let is_fail_scenario_add = false;
             let is_fail_speaker = false;
 
             /////////////// IF NOT SET TOKEN OR COOKIE : GET IT Begin ////////
@@ -197,7 +195,7 @@ module.exports = function (RED) {
                 /////////////// GET CSRF TOKEN End //////////////
 
                 ////// begin work with devices
-                if (should_update) {
+                if (should_update || !is_speaker_set) {
 
                     if (!is_speaker_set && !is_fail_cookies) {
                         let devices_data = {};
@@ -275,7 +273,6 @@ module.exports = function (RED) {
                     if (speakers_length > 1) {
                         if (is_debug) Debug_Log(`There are ${speakers_length} speakers`);
                     }
-
                     speaker_id_all.forEach(id => {
                         if (is_debug) Debug_Log("Configure speaker " + id);
                         scenario_template.steps[0].parameters.launch_devices.push({
@@ -287,7 +284,7 @@ module.exports = function (RED) {
                 /////////////// GET VERIFY SPEAKER End //////////////
 
 
-                if (should_update) {
+                if (should_update || !is_scenario_set) {
 
                     /////////////// scenarios Begin //////////////
                     if (!is_scenario_set && !is_fail_cookies) {
@@ -309,22 +306,20 @@ module.exports = function (RED) {
                         /////////////// GET scenarios End //////////////
 
                         /////////////// GET Search SCENARIO Begin //////////////
-                        if (scenarios_data.scenarios && !is_fail_scenario) {
+                        if (scenarios_data.scenarios) {
                             scenarios_data.scenarios.forEach(scenario => {
                                 if (scenario.name === scenario_name) {
                                     scenario_id = scenario.id;
-                                    is_found_scenario = true;
+                                    if (is_debug) Debug_Log("Get scenarios: found scenario ID is " + scenario_id);
                                 }
                             });
+                            if (scenario_id.length === 0) is_fail_scenario = true;
                         } else {
-                            if (is_debug) Debug_Log("Get scenarios: no scenarios in account");
+                            is_fail_scenario = true;
                         }
-                        /////////////// GET Search SCENARIO End //////////////
 
-                        /////////////// GET ADD SCENARIO Begin //////////////
-                        if (is_found_scenario) {
-                            if (is_debug) Debug_Log("Get scenarios: found scenario ID is " + scenario_id);
-                        } else {
+                        if (is_fail_scenario) {
+                            /////////////// GET ADD SCENARIO Begin //////////////
                             setStatus("green", "ring", "Add scenarios", "begin");
                             await fetch("https://iot.quasar.yandex.ru/m/user/scenarios",
                                 {
@@ -339,15 +334,17 @@ module.exports = function (RED) {
                                     scenario_id = res.scenario_id;
                                     setStatus("green", "dot", "Add scenarios", "ok");
                                 });
-
-                            /////////////// ADD scenarios End //////////////
+                            /////////////// GET ADD SCENARIO End //////////////
                         }
-                        /////////////// GET ADD SCENARIO End //////////////
+                        /////////////// GET Search SCENARIO End //////////////
+
+                        // Verify Scenario
+                        is_fail_scenario = (scenario_id.length === 0);
                     }
                     /////////////// scenarios End //////////////
 
                     ////////////////////// NOW SEND COMMAND Begin ////////////////
-                    if (!is_fail_cookies && speaker_id.length > 0 && scenario_id.length > 0 && !is_fail_speaker && !is_fail_scenario && speaker_id_all.length > 0) {
+                    if (!is_fail_cookies && speakers_length > 0 && scenario_id.length > 0 && !is_fail_speaker && !is_fail_scenario) {
 
                         ////////////////////// PUT NEW COMMAND Begin ////////////////
                         setStatus("grey", "ring", "Put scenario", "begin");
@@ -380,8 +377,7 @@ module.exports = function (RED) {
                 if (!is_cookies_set || !is_speaker_set || !is_scenario_set) {
                     if (!is_fail_cookies && !is_fail_scenario && !is_fail_speaker) {
                         if (is_debug) Debug_Log("Show all data: ok");
-                        msg.cookies = cookies;
-                        msg.speaker_id = speaker_id;
+                        // msg.cookies = cookies;
                         msg.speaker_id_all = speaker_id_all;
                         msg.scenario_id = scenario_id;
                         node.send(msg);
