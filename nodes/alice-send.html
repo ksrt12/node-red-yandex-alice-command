@@ -17,47 +17,43 @@
     </div>
 </script>
 
-
-
 <script type="text/html" data-help-name="alice-send">
     <p>Send voice command or TTS to Yandex Alice speaker</p>
-</script>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">string | json object</span></dt>
+        <dd>JSON object template: <br>{type: <i>"cmd|tts"</i>, text: <i>text</i>}</dd>
+    </dl>
 
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">string</span></dt>
+    </dl>
+</script>
 
 <script type="text/javascript">
 
-    RED.nodes.registerType('alice-send',{
+    RED.nodes.registerType('alice-send', {
         category: 'Speaker',
         color: '#9874fc',
         defaults: {
-            name: {
-                value: null,
-                required: false
-            },
-            login: {
-                type: "yandex-alice-login",
-                required: true
-            },
-            command_type: {value:"tts"}
+            name: { value: null, required: false },
+            login: { type: "yandex-alice-login", required: true },
+            command_type: { value: "tts" }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 1,
+        outputs: 1,
         align: 'right',
         outputLabels: ["debug"],
-//        icon: 'swiitch.png',
         icon: 'alice.png',
-//        icon: "icon.png",
-        label: function() {
-            return this.name||"alice-send";
+        label: function () {
+            return this.name || "alice-send";
         },
-        oneditprepare: function ()
-        {
-          let node = this;
-//          Get_Device_From_Cloud(node.cloud_token, node.device_type, node.device_id);
+        oneditprepare: function () {
+            let node = this;
+            //          Get_Device_From_Cloud(node.cloud_token, node.device_type, node.device_id);
         },
-        oneditsave: function ()
-        {
+        oneditsave: function () {
         }
     });
 </script>
-
