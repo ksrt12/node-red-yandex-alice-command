@@ -8,11 +8,11 @@
     </div>
     <div class="form-row">
         <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
-        <input type="text" id="node-config-input-username" placeholder="Yandex Username [temp disabled]" disabled>
+        <input type="text" id="node-config-input-username" placeholder="Yandex Username">
     </div>
     <div class="form-row">
         <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
-        <input type="password" id="node-config-input-password" placeholder="Yandex password [temp disabled]" disabled>
+        <input type="password" id="node-config-input-password" placeholder="Yandex password">
     </div>
 <!--
     <div class="form-row">
@@ -22,9 +22,8 @@
 -->
     <div class="form-row">
         <label for="node-config-input-cookies"><i class="fa fa-globe"></i> Cookies</label>
-        <input type="text" id="node-config-input-cookies" placeholder="Yandex Alice cookies">
+        <input type="text" id="node-config-input-cookies" placeholder="Yandex cookies">
     </div>
-    <div class="form-tips">[TEMP] cookie-only authentication.<br></div><br>
     <div class="form-row">
         <label for="node-input-speaker_id"><i class="fa fa-globe"></i> Speaker id</label>
         <input type="text" id="node-config-input-speaker_id" placeholder="Speaker id">
@@ -72,9 +71,9 @@
         category: 'config',
         defaults: {
             name: { value: "Yandex", required: false },
-            username: { value: null, required: false },
-            password: { value: null, required: false },
-            cookies: { value: "", required: true },
+            username: { value: null, required: true },
+            password: { value: null, required: true },
+            cookies: { value: "", required: false },
             speaker_name: { value: "" },
             scenario_name: { value: "Голос" },
             scenario_id: { value: "" },

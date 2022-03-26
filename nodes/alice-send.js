@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const https = require('https');
 
 module.exports = function (RED) {
 
@@ -128,49 +129,118 @@ module.exports = function (RED) {
             node.status({}); // clean
 
             async function make_action() {
-                /*function redirect_go(body, response, resolveWithFullResponse) {
-                    if (is_debug) Debug_Log("Get cookies: stage 2: begin");
-                    if (response.statusCode != 302) {
-                        is_fail_cookies = true;
-                        Debug_Log("Get cookies:stage 2: fail " + response.statusCode);
-                        SetError("Alice:error:cookies:stage 2:" + response.statusCode);
-                    }
-                    var headers = response.headers;
-                    //                node.send(headers);
-                    cookies = '';
-                    headers['set-cookie'].forEach(function (item, i, arr) {
-                        tmp_cookie = item.substring(0, item.indexOf('; ')) + ";";
-                        //                  node.send("cookie " + i + " is " + tmp_cookie);
-                        cookies += tmp_cookie;
-                    });
-                    ///////////////// SEND MESSAGE IN THIS STRING ///////////
-                    if (response.statusCode === 302) { } else { }
-                    if (is_debug) Debug_Log("Get cookies: stage 2: end");
-                } */
-                //////// function for get cookie on login end /////
 
-                /////////////// IF NOT SET TOKEN OR COOKIE : GET IT Begin ////////
                 if (!is_cookies_set) {
 
                     setStatus("blue", "ring", "Get cookies", "begin");
                     /////////////// GET COOKIES Begin //////////////
-                    await fetch("https://passport.yandex.ru/passport?mode=auth&retpath=https://yandex.ru",
+
+                    let yacookies = "";
+                    let csrf_token = "";
+                    let process_uuid = "";
+                    let track_id = "";
+
+                    const agent = new https.Agent({ keepAlive: true });
+                    const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36";
+
+                    await fetch("https://passport.yandex.ru/auth?repath=https://yandex.ru",
+                        {
+                            method: "GET",
+                            headers: { "User-Agent": UserAgent },
+                            agent
+                        })
+                        .then(res => {
+                            let yaheaders = res.headers.raw();
+                            yaheaders['set-cookie'].forEach(tmp => {
+                                let tmp_cookie = tmp.substring(0, tmp.indexOf('; ')) + ";";
+                                if (tmp_cookie.length > 8) {
+                                    yacookies += tmp_cookie;
+                                }
+                            });
+                            return res.text();
+                        })
+                        .then(text => {
+                            let start_index = text.indexOf('"csrf":') + 8;
+                            csrf_token = text.slice(start_index, start_index + 54);
+
+                            start_index = text.indexOf('process_uuid=') + 13;
+                            process_uuid = text.slice(start_index, start_index + 36);
+                        });
+
+                    await fetch('https://passport.yandex.ru/registration-validations/auth/multi_step/start',
+                        {
+                            method: 'POST',
+                            body: 'csrf_token=' + csrf_token +
+                                '&login=' + node.username +
+                                '&process_uuid=' + process_uuid +
+                                'repath=https://yandex.ru',
+                            headers: {
+                                'User-Agent': UserAgent,
+                                'Referer': 'https://passport.yandex.ru/auth',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                "cookie": yacookies
+                            },
+                            redirect: 'error',
+                            agent
+                        })
+                        .catch(e => console.log(e))
+                        .then(req => req.json())
+                        .then(json => track_id = json.track_id);
+
+                    let password_res;
+                    await fetch("https://passport.yandex.ru/registration-validations/auth/multi_step/commit_password",
                         {
                             method: "POST",
+                            body: "csrf_token=" + csrf_token +
+                                "&track_id=" + track_id +
+                                "&password=" + encodeURIComponent(node.password) +
+                                '&retpath=https://yandex.ru',
+                            headers: {
+                                'User-Agent': UserAgent,
+                                'Referer': 'https://passport.yandex.ru/auth',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                "cookie": yacookies
+                            },
                             redirect: 'error',
-                            body: 'login=' + node.username + '&passwd=' + encodeURIComponent(node.password),
+                            agent
                         })
-                        .catch(err => {
-                            is_fail_cookies = true;
-                            SetError("Get cookies", err);
+                        .catch(e => console.log(e))
+                        .then(req => {
+                            console.log(req.status, req.statusText);
+                            if (req.status === 200) {
+                                password_res = req;
+                                return req.json();
+                            } else {
+                                SetError("Get cookies", req.status);
+                                is_fail_cookies = true;
+                            }
                         })
-                        .then(req => req.headers.raw()['set-cookie'].forEach(tmp => {
-                            cookies += tmp.substring(0, tmp.indexOf('; ')) + ";";
-                        }))
-                        .then(() => {
-                            if (cookies.length > 50) setStatus("blue", "dot", "Get cookies", "ok");
+                        .then(res => {
+                            if (res.status === 'ok') {
+                                let headers = password_res.headers.raw();
+                                headers['set-cookie'].forEach(tmp => {
+                                    let tmp_cookie = tmp.substring(0, tmp.indexOf('; ')) + ";";
+                                    if (tmp_cookie.length > 4) {
+                                        cookies += tmp_cookie;
+                                    }
+                                });
+                            } else {
+                                SetError("Get cookies", res.status);
+                                is_fail_cookies = true;
+                            }
                         });
+
                     /////////////// GET COOKIES End //////////////
+                    if (cookies.length > 70) {
+                        setStatus("blue", "dot", "Get cookies", "ok");
+                        Debug_Log("Copy cookies to config:");
+                        Debug_Log(cookies);
+                        is_fail_cookies = false;
+                    } else {
+                        is_fail_cookies = true;
+                    }
                 }
                 /////////////// IF NOT SET TOKEN OR COOKIE : GET IT End ////////
 
