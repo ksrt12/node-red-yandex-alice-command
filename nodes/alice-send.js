@@ -130,10 +130,10 @@ module.exports = function (RED) {
 
             async function make_action() {
 
+                /////////////// GET COOKIES Begin //////////////
                 if (!is_cookies_set) {
 
                     setStatus("blue", "ring", "Get cookies", "begin");
-                    /////////////// GET COOKIES Begin //////////////
 
                     let yacookies = "";
                     let csrf_token = "";
@@ -254,7 +254,10 @@ module.exports = function (RED) {
                             headers: { 'Cookie': cookies },
                             redirect: 'error',
                         })
-                        .catch(err => SetError("Get csrf token", err))
+                        .catch(err => {
+                            SetError("Get csrf token", err);
+                            is_fail_cookies = true;
+                        })
                         .then(req => req.text())
                         .then(res => {
                             setStatus("blue", "dot", "Get csrf token", "ok");
@@ -264,10 +267,10 @@ module.exports = function (RED) {
                 }
                 /////////////// GET CSRF TOKEN End //////////////
 
-                ////// begin work with devices
-                if (should_update || !is_speaker_set) {
-
-                    if (!is_speaker_set && !is_fail_cookies) {
+                // is cookies ok
+                if (!is_fail_cookies) {
+                    ////// begin work with devices
+                    if (!is_speaker_set) {
                         let devices_data = {};
 
                         /////////////// GET devices Begin //////////////
@@ -316,49 +319,45 @@ module.exports = function (RED) {
                     }
                     ////// end work with devices
 
-                }
+                    let capabilities = (is_cmd)
+                        ? { "type": "devices.capabilities.quasar.server_action", "state": { "instance": "text_action", "value": text } }
+                        : { "type": "devices.capabilities.quasar", "state": { "instance": "tts", "value": { "text": text } } };
 
-                let capabilities = (is_cmd)
-                    ? { "type": "devices.capabilities.quasar.server_action", "state": { "instance": "text_action", "value": text } }
-                    : { "type": "devices.capabilities.quasar", "state": { "instance": "tts", "value": { "text": text } } };
-
-                let scenario_template = {
-                    "name": scenario_name,
-                    "icon": "home",
-                    "triggers": [{ "type": "scenario.trigger.voice", "value": scenario_name }],
-                    "steps": [{
-                        "type": "scenarios.steps.actions",
-                        "parameters": { "launch_devices": [], "requested_speaker_capabilities": [] }
-                    }]
-                };
+                    let scenario_template = {
+                        "name": scenario_name,
+                        "icon": "home",
+                        "triggers": [{ "type": "scenario.trigger.voice", "value": scenario_name }],
+                        "steps": [{
+                            "type": "scenarios.steps.actions",
+                            "parameters": { "launch_devices": [], "requested_speaker_capabilities": [] }
+                        }]
+                    };
 
 
-                /////////////// GET VERIFY SPEAKER Begin //////////////
-                const speakers_length = speaker_id_all.length;
-                if (speakers_length === 0) {
-                    is_fail_speaker = true;
-                    SetError("Verify speakers", "no speakers");
-                } else {
-                    setStatus("yellow", "dot", "Verify speakers", "ok");
-                    if (speakers_length > 1) {
-                        if (is_debug) Debug_Log(`There are ${speakers_length} speakers`);
-                    }
-                    speaker_id_all.forEach(id => {
-                        if (is_debug) Debug_Log("Configure speaker " + id);
-                        scenario_template.steps[0].parameters.launch_devices.push({
-                            "id": id,
-                            "capabilities": [capabilities]
+                    /////////////// GET VERIFY SPEAKER Begin //////////////
+                    const speakers_length = speaker_id_all.length;
+                    if (speakers_length === 0) {
+                        is_fail_speaker = true;
+                        SetError("Verify speakers", "no speakers");
+                    } else {
+                        setStatus("yellow", "dot", "Verify speakers", "ok");
+                        if (speakers_length > 1) {
+                            if (is_debug) Debug_Log(`There are ${speakers_length} speakers`);
+                        }
+                        speaker_id_all.forEach(id => {
+                            if (is_debug) Debug_Log("Configure speaker " + id);
+                            scenario_template.steps[0].parameters.launch_devices.push({
+                                "id": id,
+                                "capabilities": [capabilities]
+                            });
                         });
-                    });
-                }
-                /////////////// GET VERIFY SPEAKER End //////////////
-
-
-                if (should_update || !is_scenario_set) {
+                    }
+                    /////////////// GET VERIFY SPEAKER End //////////////
 
                     /////////////// scenarios Begin //////////////
-                    if (!is_scenario_set && !is_fail_cookies) {
+                    if (should_update || !is_scenario_set) {
                         let scenarios_data = {};
+
                         /////////////// GET scenarios Begin //////////////
                         setStatus("yellow", "ring", "Get scenarios", "begin");
                         await fetch("https://iot.quasar.yandex.ru/m/user/scenarios",
@@ -411,37 +410,76 @@ module.exports = function (RED) {
                         // Verify Scenario
                         is_fail_scenario = (scenario_id.length === 0);
                     }
+
+                    let is_equal_state = false;
+                    if (!is_fail_scenario) {
+                        let scenario_data = {};
+                        /////////////// GET scenario info Begin //////////////
+                        setStatus("yellow", "ring", "Get scenario info", "begin");
+                        await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/edit",
+                            {
+                                method: "GET",
+                                headers: { 'Cookie': cookies },
+                                redirect: 'error',
+                            })
+                            .catch(err => SetError("Get scenario info", err))
+                            .then(req => req.json())
+                            .then(res => {
+                                scenario_data = res;
+                                setStatus("yellow", "dot", "Get scenario info", "ok");
+                            });
+
+                        let remote_state = scenario_data.scenario.steps[0].parameters.launch_devices[0].capabilities[0].state;
+                        let local_state = capabilities.state;
+
+                        if (local_state.instance === remote_state.instance) {
+                            if (typeof local_state.value === "object") {
+                                if (local_state.value.text === remote_state.value.text) {
+                                    is_equal_state = true;
+                                }
+                            } else {
+                                if (local_state.value === remote_state.value) {
+                                    is_equal_state = true;
+                                }
+                            }
+                        }
+                        /////////////// GET scenario info End //////////////
+                        if (is_debug) Debug_Log("Scenario state is equal: " + is_equal_state);
+                    }
                     /////////////// scenarios End //////////////
 
-                    ////////////////////// NOW SEND COMMAND Begin ////////////////
-                    if (!is_fail_cookies && speakers_length > 0 && scenario_id.length > 0 && !is_fail_speaker && !is_fail_scenario) {
+                    ////////////////////// PUT NEW COMMAND Begin ////////////////
+                    if (should_update || !is_equal_state) {
+                        if (speakers_length > 0 && scenario_id.length > 0 && !is_fail_speaker && !is_fail_scenario) {
 
-                        ////////////////////// PUT NEW COMMAND Begin ////////////////
-                        setStatus("grey", "ring", "Put scenario", "begin");
-                        await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id,
-                            {
-                                method: "PUT",
-                                headers: { 'Cookie': cookies, 'x-csrf-token': csrf_token },
-                                redirect: 'error',
-                                body: JSON.stringify(scenario_template),
-                            })
-                            .catch(err => SetError("Put scenario", err))
-                            .then(() => setStatus("grey", "dot", "Put scenario", "ok"));
-                        ////////////////////// PUT NEW COMMAND End ////////////////
+                            setStatus("grey", "ring", "Put scenario", "begin");
+                            await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id,
+                                {
+                                    method: "PUT",
+                                    headers: { 'Cookie': cookies, 'x-csrf-token': csrf_token },
+                                    redirect: 'error',
+                                    body: JSON.stringify(scenario_template),
+                                })
+                                .catch(err => SetError("Put scenario", err))
+                                .then(() => setStatus("grey", "dot", "Put scenario", "ok"));
+                        }
                     }
+                    ////////////////////// PUT NEW COMMAND End ////////////////
+
+                    ////////////////////// EXEC NEW COMMAND Begin ////////////////
+                    setStatus("blue", "ring", "Exec", "begin");
+                    await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/actions",
+                        {
+                            method: "POST",
+                            headers: { 'Cookie': cookies, 'x-csrf-token': csrf_token },
+                            redirect: 'error',
+                        })
+                        .catch(err => SetError("Exec: error:" + err))
+                        .then(setStatus("blue", "dot", "Exec", "ok"));
+                    ////////////////////// EXEC NEW COMMAND End ////////////////
+                    node.status({});
                 }
-                ////////////////////// EXEC NEW COMMAND Begin ////////////////
-                setStatus("blue", "ring", "Exec", "begin");
-                await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/actions",
-                    {
-                        method: "POST",
-                        headers: { 'Cookie': cookies, 'x-csrf-token': csrf_token },
-                        redirect: 'error',
-                    })
-                    .catch(err => SetError("Exec: error:" + err))
-                    .then(setStatus("blue", "dot", "Exec", "ok"));
-                ////////////////////// NOW SEND COMMAND End ////////////////
-                node.status({});
+                // is cookies ok
 
                 ///////////////// SEND DATA Begin ///////////
                 if (!is_cookies_set || !is_speaker_set || !is_scenario_set) {
@@ -454,8 +492,8 @@ module.exports = function (RED) {
                     }
                 }
                 ///////////////// SEND DATA End ///////////
-
-            }////////////// end of acync
+            }
+            ////////////// end of acync
 
             make_action().then();
 
