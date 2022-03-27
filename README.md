@@ -1,80 +1,90 @@
-Node-RED nodes for send command and tts to Yandex Alice
+# Node-RED nodes for send command and tts to Yandex Alice
 
-Nodes:
+The original repo is owned by [@AntonTumilovich](https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command)
+
+## Nodes:
 
 -   alice-send Send voice command or text to speach to any Yandex.Alice speakers.
 
-Examples:  
-https://www.youtube.com/watch?v=kY6g7x9B-PU  
-https://www.youtube.com/watch?v=ldF4b11SaiQ
+## Examples:
 
-Installation:  
-npm install node-red-contrib-yandex-alice-command
+-   https://www.youtube.com/watch?v=kY6g7x9B-PU
+-   https://www.youtube.com/watch?v=ldF4b11SaiQ
 
-Changes in version 1.1.6 27/03/22:
+## Installation:
+
+`npm install node-red-contrib-yandex-alice-command`
+
+or clone repo to any place and then
+
+`npm install *full path to cloned repo folder*`
+
+## Changelog
+
+Version 1.1.6 27/03/22:
 
 -   Fix login authorization
 -   Rewrite update logic
 -   Rewrite docs help
 
-Changes in version 1.1.5 22/03/22:
+Version 1.1.5 22/03/22:
 
 -   Fix some logic
 
-Changes in version 1.1.4 23/03/22:
+Version 1.1.4 23/03/22:
 
 -   Drop useless speaker name
 -   Rewrite logs logic
 
-Changes in version 1.1.2 22/03/22:
+Version 1.1.2 22/03/22:
 
 -   Save previous node state
 
-Changes in version 1.1 19/03/22:
+Version 1.1 19/03/22:
 
 -   Use node-fetch instead of deprecated request-promise
 
-Changes in version 1.20 12/03/22:
+Version 1.20 12/03/22:
 
 -   Fixed for scenario new API
 
-Changes in version 1.19 11/05/21:
+Version 1.19 11/05/21:
 
 -   Fixed spec chars in password
 
-Changes in version 1.18 18/03/21:
+Version 1.18 18/03/21:
 
 -   Fixed for scenario new API
 
-Changes in version 1.17 27/11/20:
+Version 1.17 27/11/20:
 
 -   Fixed speaker not in room
 
-Changes in version 1.15 05/08/20:
+Version 1.15 05/08/20:
 
 -   Fixed for new Yandex Alice API
 
-Changes in version 1.14 19/06/20:
+Version 1.14 19/06/20:
 
 -   Changed Get cookies procedure, now not needed get token
 
-Changes in version 1.12 16/06/20:
+Version 1.12 16/06/20:
 
 -   Added Separator sybmol ; or , or |
 
-Changes in version 1.10 16/06/20:
+Version 1.10 16/06/20:
 
 -   Added Send to selected speakers: speaker_id and speaker_name as list separated by sybmol ;
 
-Changes in version 1.08 15/06/20:
+Version 1.08 15/06/20:
 
 -   Added Send to All speakers or to selected speaker
 
-Changes in version 1.07 15/06/20:
+Version 1.07 15/06/20:
 
 -   Fixed Get token with pasword that include special chars
 
-Changes in version 1.05 14/06/20:
+Version 1.05 14/06/20:
 
 -   Added Alice icon
 -   Added Debug option in login page
