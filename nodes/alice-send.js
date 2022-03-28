@@ -55,9 +55,9 @@ module.exports = function (RED) {
                         text = json_data.text;
                     }
                     break;
-                default:
-                    text = 'Ошибка';
             }
+
+            text ||= 'Ошибка';
 
             const setStatus = (color, shape, topic, status) => {
                 node.status({ fill: color, shape: shape, text: topic });

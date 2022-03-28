@@ -13,11 +13,15 @@ The original repo is owned by [@AntonTumilovich](https://github.com/AntonTumilov
 
 ## Installation:
 
-`npm install node-red-contrib-yandex-alice-command`
+```
+npm install node-red-contrib-yandex-alice-command
+```
 
 or clone repo to any place and then
 
-`npm install *full path to cloned repo folder*`
+```
+npm install *full path to cloned repo folder*
+```
 
 ## Changelog
 
@@ -50,47 +54,47 @@ Version 1.1 19/03/22:
 
 -   Use node-fetch instead of deprecated request-promise
 
-Version 1.20 12/03/22:
+Version 1.0.20 12/03/22:
 
 -   Fixed for scenario new API
 
-Version 1.19 11/05/21:
+Version 1.0.19 11/05/21:
 
 -   Fixed spec chars in password
 
-Version 1.18 18/03/21:
+Version 1.0.18 18/03/21:
 
 -   Fixed for scenario new API
 
-Version 1.17 27/11/20:
+Version 1.0.17 27/11/20:
 
 -   Fixed speaker not in room
 
-Version 1.15 05/08/20:
+Version 1.0.15 05/08/20:
 
 -   Fixed for new Yandex Alice API
 
-Version 1.14 19/06/20:
+Version 1.0.14 19/06/20:
 
 -   Changed Get cookies procedure, now not needed get token
 
-Version 1.12 16/06/20:
+Version 1.0.12 16/06/20:
 
 -   Added Separator sybmol ; or , or |
 
-Version 1.10 16/06/20:
+Version 1.0.10 16/06/20:
 
 -   Added Send to selected speakers: speaker_id and speaker_name as list separated by sybmol ;
 
-Version 1.08 15/06/20:
+Version 1.0.8 15/06/20:
 
 -   Added Send to All speakers or to selected speaker
 
-Version 1.07 15/06/20:
+Version 1.0.7 15/06/20:
 
 -   Fixed Get token with pasword that include special chars
 
-Version 1.05 14/06/20:
+Version 1.0.5 14/06/20:
 
 -   Added Alice icon
 -   Added Debug option in login page
