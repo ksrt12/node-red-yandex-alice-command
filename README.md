@@ -21,6 +21,12 @@ or clone repo to any place and then
 
 ## Changelog
 
+Version 1.1.7 28/03/22:
+
+-   Fix cookies generation
+-   Rewrite exception handling
+-   Rewrite topics handling
+
 Version 1.1.6 27/03/22:
 
 -   Fix login authorization
