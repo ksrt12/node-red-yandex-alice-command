@@ -2,12 +2,13 @@ const fetch = require("node-fetch");
 const https = require('https');
 const sleep = require('util').promisify(setTimeout);
 
-module.exports = function (RED) {
+module.exports = function (/** @type {RED} */ RED) {
 
-    function Y_Alice_Send(config) {
+    function Y_Alice_Send(/** @type {NodeConfig} */ config) {
         RED.nodes.createNode(this, config);
 
         this.login = config.login;
+        /** @type {RedNode} */
         this.login_node = RED.nodes.getNode(this.login);
         this.command_type = config.command_type;
 
@@ -17,13 +18,15 @@ module.exports = function (RED) {
         this.scenario_name = this.login_node.scenario_name;
         this.speaker_id = this.login_node.speaker_id;
         this.scenario_id = this.login_node.scenario_id;
-
+        /** @type {boolean} */
         this.debug_enable = this.login_node.debug_enable;
 
+        /** @type {RedNode} */
         let node = this;
         node.previous = { text: null, is_cmd: null };
         //node.log('debug is ' + this.debug_enable);
 
+        /** @type {FuncLog} */
         const Debug_Log = msg_text => {
             node.log(msg_text);
             node.send({ payload: msg_text });
@@ -46,9 +49,10 @@ module.exports = function (RED) {
                     is_cmd = true;
                     break;
                 case 'json':
+                    /** @type {{type: string, text: string}} */
                     let json_data = msg.payload;
                     if (typeof json_data !== "object") {
-                        setError("Wrong JSON format");
+                        SetError("Wrong JSON format");
                         force_stop = true;
                     } else {
                         is_cmd = (json_data.type === 'cmd');
@@ -59,13 +63,15 @@ module.exports = function (RED) {
 
             text ||= 'Ошибка';
 
-            const setStatus = (color, shape, topic, status) => {
+            /** @type {FuncSetStatus} */
+            const SetStatus = (color, shape, topic, status) => {
                 node.status({ fill: color, shape: shape, text: topic });
                 if (is_debug) Debug_Log(topic + ": " + status);
             };
 
-            const setError = (topic, status) => {
-                setStatus("red", "dot", topic, "fail: " + status);
+            /** @type {FuncSetError} */
+            const SetError = (topic, status) => {
+                SetStatus("red", "dot", topic, "fail: " + status);
                 node.send(status);
             };
 
@@ -139,7 +145,7 @@ module.exports = function (RED) {
                     const agent = new https.Agent({ keepAlive: true });
                     const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36";
 
-                    setStatus("blue", "ring", topic, "init");
+                    SetStatus("blue", "ring", topic, "init");
                     await fetch("https://passport.yandex.ru/auth?repath=https://yandex.ru",
                         {
                             method: "GET",
@@ -172,13 +178,13 @@ module.exports = function (RED) {
                             process_uuid = text.slice(start_index, start_index + 36);
                         })
                         .catch(err => {
-                            setError(topic, err);
+                            SetError(topic, err);
                             is_fail_cookies = true;
                         });
 
                     // init ok
                     if (!is_fail_cookies) {
-                        setStatus("blue", "ring", topic, "login");
+                        SetStatus("blue", "ring", topic, "login");
                         await fetch('https://passport.yandex.ru/registration-validations/auth/multi_step/start',
                             {
                                 method: 'POST',
@@ -212,14 +218,14 @@ module.exports = function (RED) {
                                 }
                             })
                             .catch(err => {
-                                setError(topic, err);
+                                SetError(topic, err);
                                 is_fail_cookies = true;
                             });
 
                         // login ok
                         if (!is_fail_cookies) {
                             let password_res;
-                            setStatus("blue", "ring", topic, "password");
+                            SetStatus("blue", "ring", topic, "password");
                             await fetch("https://passport.yandex.ru/registration-validations/auth/multi_step/commit_password",
                                 {
                                     method: "POST",
@@ -259,13 +265,13 @@ module.exports = function (RED) {
                                     }
                                 })
                                 .catch(err => {
-                                    setError(topic, err);
+                                    SetError(topic, err);
                                     is_fail_cookies = true;
                                 });
                             /////////////// GET COOKIES End //////////////
 
                             if (!is_fail_cookies && cookies.length > 70) {
-                                setStatus("blue", "dot", topic, "ok");
+                                SetStatus("blue", "dot", topic, "ok");
                                 Debug_Log("Copy cookies to config:");
                                 Debug_Log(cookies);
                             } else {
@@ -283,7 +289,7 @@ module.exports = function (RED) {
                 topic = "Get csrf token";
                 if (!is_fail_cookies) {
 
-                    setStatus("blue", "ring", topic, "begin");
+                    SetStatus("blue", "ring", topic, "begin");
                     await fetch("https://yandex.ru/quasar/iot",
                         {
                             method: "GET",
@@ -299,13 +305,13 @@ module.exports = function (RED) {
                         })
                         .then(res => {
                             if (!is_fail_cookies) {
-                                setStatus("blue", "dot", topic, "ok");
+                                SetStatus("blue", "dot", topic, "ok");
                                 let start_index = res.indexOf('"csrfToken2":"') + 14;
                                 csrf_token = res.slice(start_index, start_index + 51);
                             }
                         })
                         .catch(err => {
-                            setError(topic, err);
+                            SetError(topic, err);
                             is_fail_cookies = true;
                             if (err === 302) Debug_Log("Wrong cookies. Delete old cookies from login node and regenerate it");
                         });
@@ -320,7 +326,7 @@ module.exports = function (RED) {
 
                         /////////////// GET devices Begin //////////////
                         topic = "Get devices";
-                        setStatus("yellow", "ring", topic, "begin");
+                        SetStatus("yellow", "ring", topic, "begin");
                         await fetch("https://iot.quasar.yandex.ru/m/user/devices",
                             {
                                 method: "GET",
@@ -329,12 +335,12 @@ module.exports = function (RED) {
                             })
                             .catch(err => {
                                 is_fail_speaker = true;
-                                setError(topic, err);
+                                SetError(topic, err);
                             })
                             .then(req => req.json())
                             .then(res => {
                                 devices_data = res;
-                                setStatus("yellow", "dot", topic, "ok");
+                                SetStatus("yellow", "dot", topic, "ok");
                             });
                         /////////////// GET devices End //////////////
 
@@ -385,9 +391,9 @@ module.exports = function (RED) {
                     const speakers_length = speaker_id_all.length;
                     if (speakers_length === 0) {
                         is_fail_speaker = true;
-                        setError(topic, "no speakers");
+                        SetError(topic, "no speakers");
                     } else {
-                        setStatus("yellow", "dot", topic, "ok");
+                        SetStatus("yellow", "dot", topic, "ok");
                         if (speakers_length > 1) {
                             if (is_debug) Debug_Log(`There are ${speakers_length} speakers`);
                         }
@@ -410,18 +416,18 @@ module.exports = function (RED) {
 
                             /////////////// GET scenarios Begin //////////////
                             topic = "Get scenarios";
-                            setStatus("yellow", "ring", topic, "begin");
+                            SetStatus("yellow", "ring", topic, "begin");
                             await fetch("https://iot.quasar.yandex.ru/m/user/scenarios",
                                 {
                                     method: "GET",
                                     headers: { 'Cookie': cookies },
                                     redirect: 'error',
                                 })
-                                .catch(err => setError(topic, err))
+                                .catch(err => SetError(topic, err))
                                 .then(req => req.json())
                                 .then(res => {
                                     scenarios_data = res;
-                                    setStatus("yellow", "dot", topic, "ok");
+                                    SetStatus("yellow", "dot", topic, "ok");
                                 });
                             /////////////// GET scenarios End //////////////
 
@@ -441,7 +447,7 @@ module.exports = function (RED) {
                             if (is_fail_scenario) {
                                 /////////////// GET ADD SCENARIO Begin //////////////
                                 topic = "Add scenarios";
-                                setStatus("green", "ring", topic, "begin");
+                                SetStatus("green", "ring", topic, "begin");
                                 await fetch("https://iot.quasar.yandex.ru/m/user/scenarios",
                                     {
                                         method: "POST",
@@ -449,11 +455,11 @@ module.exports = function (RED) {
                                         redirect: 'error',
                                         body: JSON.stringify(scenario_template),
                                     })
-                                    .catch(err => setError(topic, err))
+                                    .catch(err => SetError(topic, err))
                                     .then(req => req.json())
                                     .then(res => {
                                         scenario_id = res.scenario_id;
-                                        setStatus("green", "dot", topic, "ok");
+                                        SetStatus("green", "dot", topic, "ok");
                                     });
                                 /////////////// GET ADD SCENARIO End //////////////
                             }
@@ -470,18 +476,18 @@ module.exports = function (RED) {
                             let scenario_data = {};
                             /////////////// GET scenario info Begin //////////////
                             topic = "Get scenario info";
-                            setStatus("yellow", "ring", topic, "begin");
+                            SetStatus("yellow", "ring", topic, "begin");
                             await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/edit",
                                 {
                                     method: "GET",
                                     headers: { 'Cookie': cookies },
                                     redirect: 'error',
                                 })
-                                .catch(err => setError(topic, err))
+                                .catch(err => SetError(topic, err))
                                 .then(req => req.json())
                                 .then(res => {
                                     scenario_data = res;
-                                    setStatus("yellow", "dot", topic, "ok");
+                                    SetStatus("yellow", "dot", topic, "ok");
                                 });
 
                             let remote_state = scenario_data.scenario.steps[0].parameters.launch_devices[0].capabilities[0].state;
@@ -506,7 +512,7 @@ module.exports = function (RED) {
                             if (should_update || !is_equal_state) {
                                 ////////////////////// PUT NEW COMMAND Begin ////////////////
                                 topic = "Put scenario";
-                                setStatus("grey", "ring", topic, "begin");
+                                SetStatus("grey", "ring", topic, "begin");
                                 await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id,
                                     {
                                         method: "PUT",
@@ -514,22 +520,22 @@ module.exports = function (RED) {
                                         redirect: 'error',
                                         body: JSON.stringify(scenario_template),
                                     })
-                                    .catch(err => setError(topic, err))
-                                    .then(() => setStatus("grey", "dot", topic, "ok"));
+                                    .catch(err => SetError(topic, err))
+                                    .then(() => SetStatus("grey", "dot", topic, "ok"));
                                 ////////////////////// PUT NEW COMMAND End ////////////////
                             }
 
                             ////////////////////// EXEC NEW COMMAND Begin ////////////////
                             topic = "Exec";
-                            setStatus("blue", "ring", topic, "begin");
+                            SetStatus("blue", "ring", topic, "begin");
                             await fetch("https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/actions",
                                 {
                                     method: "POST",
                                     headers: { 'Cookie': cookies, 'x-csrf-token': csrf_token },
                                     redirect: 'error',
                                 })
-                                .catch(err => setError(topic, err))
-                                .then(() => setStatus("blue", "dot", topic, "ok"));
+                                .catch(err => SetError(topic, err))
+                                .then(() => SetStatus("blue", "dot", topic, "ok"));
                             ////////////////////// EXEC NEW COMMAND End ////////////////
                             await sleep(500);
                             node.status({});
