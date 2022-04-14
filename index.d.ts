@@ -5,17 +5,28 @@ type RED = import("node-red").NodeAPI;
 type NodeConfig = import("node-red").NodeDef;
 type NodeStatusFill = import("node-red").NodeStatusFill;
 type NodeStatusShape = import("node-red").NodeStatusShape;
+type NodeContextData = import("node-red").NodeContextData;
+
+interface RedNodeLogin extends RedNode {
+    scenario_name: string;
+    debug_enable: boolean;
+}
+interface RedNodeAlice extends RedNode {
+    login: string;
+    login_node: RedNodeLogin;
+    command_type: string;
+    previous: {
+        text: string;
+        is_cmd: boolean;
+    };
+}
 
 type Body = import("node-fetch").Body;
-type Response_ = import("node-fetch").Response;
-interface Response extends Response_ { }
-
-type NodeContextData = import("node-red").NodeContextData;
+type Response = import("node-fetch").Response;
 
 type FuncLog = (msg_text: string) => void;
 type FuncSetStatus = (color: NodeStatusFill, shape: NodeStatusShape, topic: string, status: string) => void;
 type FuncSetError = (topic: string, status: string) => void;
-type FuncClean = () => NodeClean;
 
 interface defFuncs {
     SetStatus: FuncSetStatus;
@@ -50,15 +61,10 @@ interface getCookiesParams extends defFuncs { forceCreds?: aliceCreds | undefine
 type getCookies = arrowPromise<getCookiesParams, string>;
 
 interface defFetchGet extends defFuncs { headers: { Cookie: string; }; }
-interface defFetchPost extends defFuncs {
-    headers: {
-        Cookie: string;
-        'x-csrf-token': string;
-    };
-}
+interface defFetchPost extends defFuncs { headers: { Cookie: string; 'x-csrf-token': string; }; }
 type getCSRF = arrowPromise<defFetchGet, string>;
 
-interface baseAns {
+interface ansBase {
     status: string;
     request_id: string;
 }
@@ -110,7 +116,7 @@ interface device {
     groups: string[];
 }
 
-interface ansDevices extends baseAns {
+interface ansDevices extends ansBase {
     rooms: {
         id: string;
         name: string;
@@ -160,13 +166,12 @@ interface scenario {
     steps?: step[];
     is_active: boolean;
 }
-interface ansScenarios extends baseAns {
+interface ansScenarios extends ansBase {
     scenarios: scenario[];
 }
-interface ansScenarioEdit extends baseAns {
+interface ansScenarioEdit extends ansBase {
     scenario: scenario;
 }
-
 
 interface fetchGetParams extends defFetchGet {
     topic: string;
@@ -174,15 +179,14 @@ interface fetchGetParams extends defFetchGet {
 }
 interface fetchPutPostParams extends fetchGetParams, defFetchPost {
     body?: Body;
-
 }
-type getAns = ansDevices | ansScenarios | ansScenarioEdit;
-type fetchGet = arrowPromise<fetchGetParams, getAns>;
-type fetchPut = arrowPromise<fetchPutPostParams, baseAns>;
-type fetchPost = arrowPromise<fetchPutPostParams, baseAns>;
+type ansGet = ansDevices | ansScenarios | ansScenarioEdit;
+type fetchGet = arrowPromise<fetchGetParams, ansGet>;
+type fetchPut = arrowPromise<fetchPutPostParams, ansBase>;
+type fetchPost = arrowPromise<fetchPutPostParams, ansBase>;
 
 interface myFetchParams extends fetchPutPostParams {
     color: NodeStatusFill;
     method: "GET" | "PUT" | "POST";
 }
-type myFetch = arrowPromise<myFetchParams, {}>;
+type myFetch = arrowPromise<myFetchParams, ansGet | ansBase>;

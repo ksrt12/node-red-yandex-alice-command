@@ -16,7 +16,7 @@ module.exports = function (/** @type {RED} */ RED) {
         this.login_node = RED.nodes.getNode(this.login);
         this.command_type = config.command_type;
 
-        /** @type {RedNode} */
+        /** @type {RedNodeAlice} */
         let node = this;
         node.previous = { text: null, is_cmd: null };
 
@@ -51,14 +51,42 @@ module.exports = function (/** @type {RED} */ RED) {
 
         /** @type {string[]} */
         let speaker_id_all = [];
-        /** @type {string} */
-        let scenario_name = this.login_node.scenario_name.replace(new RegExp('"', 'g'), '') || "Голос";
-        /** @type {boolean} */
-        let is_debug = this.login_node.debug_enable;
+        let scenario_name = node.login_node.scenario_name.replace(new RegExp('"', 'g'), '') || "Голос";
+        let is_debug = node.login_node.debug_enable;
 
         let { cookies, speaker_id, scenario_id } = getCreds();
 
         const yiot = "https://iot.quasar.yandex.ru/m/user";
+
+        let is_cookies_set = false;
+        let is_speaker_set = false;
+        let is_scenario_set = false;
+
+        let is_fail_scenario = false;
+        let is_fail_speaker = false;
+
+        if (is(cookies)) {
+            is_cookies_set = true;
+            cookies = cookies.replace(new RegExp('"', 'g'), '');
+        }
+
+        if (is(scenario_id)) {
+            is_scenario_set = true;
+            scenario_id = scenario_id
+                .replace(new RegExp('"', 'g'), '')
+                .replace(new RegExp(' ', 'g'), '');
+        }
+
+        if (is(speaker_id)) {
+            is_speaker_set = true;
+            speaker_id = speaker_id
+                .replace(new RegExp('"', 'g'), '')
+                .replace(new RegExp(' ', 'g'), '|')
+                .replace(new RegExp(',', 'g'), '|')
+                .replace(new RegExp(';', 'g'), '|');
+
+            speaker_id_all = speaker_id.split('|').filter(i => i.length > 0);
+        }
 
         node.on('input', function (msg) {
 
@@ -94,35 +122,6 @@ module.exports = function (/** @type {RED} */ RED) {
                 node.previous.text = RED.util.cloneMessage(text);
                 node.previous.is_cmd = RED.util.cloneMessage(is_cmd);
                 should_update = true;
-            }
-
-            let is_cookies_set = false;
-            let is_speaker_set = false;
-            let is_scenario_set = false;
-
-            let is_fail_scenario = false;
-            let is_fail_speaker = false;
-
-            if (is(cookies)) {
-                is_cookies_set = true;
-                cookies = cookies.replace(new RegExp('"', 'g'), '');
-            }
-
-            if (is(scenario_id)) {
-                is_scenario_set = true;
-                scenario_id = scenario_id.replace(new RegExp('"', 'g'), '');
-                scenario_id = scenario_id.replace(new RegExp(' ', 'g'), '');
-            }
-
-            if (is(speaker_id)) {
-                is_speaker_set = true;
-                speaker_id = speaker_id
-                    .replace(new RegExp('"', 'g'), '')
-                    .replace(new RegExp(' ', 'g'), '|')
-                    .replace(new RegExp(',', 'g'), '|')
-                    .replace(new RegExp(';', 'g'), '|');
-
-                speaker_id_all = speaker_id.split('|').filter(i => i.length > 0);
             }
 
             node.status({}); // clean
@@ -190,6 +189,7 @@ module.exports = function (/** @type {RED} */ RED) {
                     let scenario_template = {
                         "name": scenario_name,
                         "icon": "home",
+                        "is_active": true,
                         "triggers": [{ "type": "scenario.trigger.voice", "value": scenario_name }],
                         "steps": [{
                             "type": "scenarios.steps.actions",

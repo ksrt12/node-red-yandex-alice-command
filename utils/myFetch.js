@@ -13,7 +13,7 @@ const general = async ({ color, topic, url, method, headers, body, SetStatus, Se
     return await fetch(url, opt)
         .then(checkStatus)
         .then((/** @type {Response} */ res) => res.json())
-        .then((/** @type {getAns | baseAns}*/ ans) => {
+        .then((/** @type {ansGet | ansBase}*/ ans) => {
             SetStatus(color, "dot", topic, ans.status);
             if (ans.status === "ok") {
                 return ans;
