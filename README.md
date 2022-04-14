@@ -25,6 +25,11 @@ npm install *full path to cloned repo folder*
 
 ## Changelog
 
+Version 2.0.1 14/04/22:
+
+-   Add activation check
+-   Const-ify code
+
 Version 2.0.0 14/04/22:
 
 -   Rewrite using node credentials

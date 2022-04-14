@@ -58,6 +58,8 @@ module.exports = function (/** @type {RED} */ RED) {
 
         let { cookies, speaker_id, scenario_id } = getCreds();
 
+        const yiot = "https://iot.quasar.yandex.ru/m/user";
+
         node.on('input', function (msg) {
 
             let text = '';
@@ -127,7 +129,6 @@ module.exports = function (/** @type {RED} */ RED) {
 
             async function make_action() {
 
-                let topic = "";
                 let csrf_token = "";
 
                 if (!is_cookies_set) {
@@ -151,8 +152,8 @@ module.exports = function (/** @type {RED} */ RED) {
 
                         // Get devices
                         /** @type {ansDevices} */
-                        let devices_data = await myFetch.Get({
-                            url: "https://iot.quasar.yandex.ru/m/user/devices",
+                        const devices_data = await myFetch.Get({
+                            url: yiot + "/devices",
                             topic: "Get devices", ...defFetchGet
                         });
 
@@ -197,7 +198,7 @@ module.exports = function (/** @type {RED} */ RED) {
                     };
 
                     // Verification
-                    topic = "Verify speakers";
+                    let topic = "Verify speakers";
                     const speakers_length = speaker_id_all.length;
                     if (speakers_length === 0) {
                         is_fail_speaker = true;
@@ -220,13 +221,15 @@ module.exports = function (/** @type {RED} */ RED) {
                     // is speaker ok
                     if (!is_fail_speaker) {
 
+                        const scenarios_url = yiot + "/scenarios";
+
                         // Scenarios section
                         if (should_update || !is_scenario_set) {
 
                             // Get all scenarios
                             /** @type {ansScenarios} */
-                            let scenarios_data = await myFetch.Get({
-                                url: "https://iot.quasar.yandex.ru/m/user/scenarios",
+                            const scenarios_data = await myFetch.Get({
+                                url: scenarios_url,
                                 topic: "Get scenarios", ...defFetchGet
                             });
 
@@ -244,8 +247,8 @@ module.exports = function (/** @type {RED} */ RED) {
 
                             // Add new scenario if it doesn't exist
                             if (is_fail_scenario) {
-                                let res = await myFetch.Post({
-                                    url: "https://iot.quasar.yandex.ru/m/user/scenarios",
+                                const res = await myFetch.Post({
+                                    url: scenarios_url,
                                     topic: "Add scenarios",
                                     body: JSON.stringify(scenario_template),
                                     ...defFetchPost
@@ -265,25 +268,36 @@ module.exports = function (/** @type {RED} */ RED) {
                         // is scenario ok
                         if (!is_fail_scenario) {
 
+                            const scenario_url = scenarios_url + "/" + scenario_id;
+
                             /** @type {ansScenarioEdit} */
-                            let scenario_data = await myFetch.Get({
-                                url: "https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/edit",
+                            const scenario_data = await myFetch.Get({
+                                url: scenario_url + "/edit",
                                 topic: "Get scenario info",
                                 ...defFetchPost
                             });
 
-                            let remote_state = scenario_data.scenario.steps[0].parameters.launch_devices[0].capabilities[0].state;
-                            let local_state = capability.state;
+                            const remote_state = scenario_data.scenario.steps[0].parameters.launch_devices[0].capabilities[0].state;
+                            const local_state = capability.state;
 
-                            let is_equal_state = (local_state.instance === remote_state.instance) &&
+                            const is_equal_state = (local_state.instance === remote_state.instance) &&
                                 (local_state.value === remote_state.value || local_state.value.text === remote_state.value.text);
 
                             if (is_debug) Debug_Log("Scenario state is equal: " + is_equal_state);
 
+                            if (!scenario_data.scenario.is_active) {
+                                await myFetch.Post({
+                                    url: scenario_url + "/activation",
+                                    topic: "Turn on scenario",
+                                    body: JSON.stringify({ is_active: true }),
+                                    ...defFetchPost
+                                });
+                            }
+
                             if (should_update || !is_equal_state) {
                                 // Update scenario
                                 await myFetch.Put({
-                                    url: "https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id,
+                                    url: scenario_url,
                                     topic: "Put scenario",
                                     body: JSON.stringify(scenario_template),
                                     ...defFetchPost
@@ -292,7 +306,7 @@ module.exports = function (/** @type {RED} */ RED) {
 
                             // Exec scenario
                             await myFetch.Post({
-                                url: "https://iot.quasar.yandex.ru/m/user/scenarios/" + scenario_id + "/actions",
+                                url: scenario_url + "/actions",
                                 topic: "Exec",
                                 ...defFetchPost
                             });
