@@ -26,8 +26,15 @@ module.exports = function (RED) {
         });
     }
 
-    RED.nodes.registerType('yandex-alice-login', Alice_Config_Node);
-    //    RED.nodes.registerType('yandex-alice-login', Alice_Config_Node, {});
+    RED.nodes.registerType('yandex-alice-login', Alice_Config_Node, {
+        credentials: {
+            username: { type: "text" },
+            password: { type: "password" },
+            cookies: { type: "password" },
+            scenario_id: { type: "text" },
+            speaker_id: { type: "text" }
+        }
+    });
 
 };
 

@@ -25,6 +25,12 @@ npm install *full path to cloned repo folder*
 
 ## Changelog
 
+Version 2.0.0 14/04/22:
+
+-   Rewrite using node credentials
+-   Move common functions to separate files
+-   Clean
+
 Version 1.1.7 28/03/22:
 
 -   Fix cookies generation

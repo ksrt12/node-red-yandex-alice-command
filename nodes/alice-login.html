@@ -22,7 +22,7 @@
 -->
     <div class="form-row">
         <label for="node-config-input-cookies"><i class="fa fa-globe"></i> Cookies</label>
-        <input type="text" id="node-config-input-cookies" placeholder="Yandex cookies">
+        <input type="password" id="node-config-input-cookies" placeholder="Yandex cookies">
     </div>
     <div class="form-row">
         <label for="node-input-speaker_id"><i class="fa fa-globe"></i> Speaker id</label>
@@ -79,6 +79,13 @@
             scenario_id: { value: "" },
             speaker_id: { value: "" },
             debug_enable: { value: false }
+        },
+        credentials: {
+            username: { type: "text" },
+            password: { type: "password" },
+            cookies: { type: "password" },
+            scenario_id: { type: "text" },
+            speaker_id: { type: "text" }
         },
         label: function () {
             return this.name || this.username;
