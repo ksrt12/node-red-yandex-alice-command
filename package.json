@@ -1,10 +1,14 @@
 {
-    "name": "node-red-contrib-yandex-alice-command",
+    "name": "@ksrt12/node-red-yandex-alice-command",
     "node-red": {
+        "version": ">=2.0.0",
         "nodes": {
             "alice-send": "nodes/alice-send.js",
             "alice-login": "nodes/alice-login.js"
         }
+    },
+    "engines": {
+        "node": ">=16.0.0"
     },
     "keywords": [
         "node-red",
@@ -12,22 +16,23 @@
         "mqtt"
     ],
     "bugs": {
-        "url": "https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command/issues/"
+        "url": "https://github.com/ksrt12/node-red-yandex-alice-command/issues/"
     },
-    "homepage": "https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command",
+    "homepage": "https://github.com/ksrt12/node-red-yandex-alice-command",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command.git"
+        "url": "git+https://github.com/ksrt12/node-red-yandex-alice-command.git"
     },
     "version": "2.0.3",
     "description": "yandex-alice-command system",
-    "main": "yandex-alice-command.js",
+    "main": "",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "Anton Tumilovich",
-    "license": "GPL",
+    "author": "Anton Tumilovich, Stepan Kazakov",
+    "license": "GPL-3.0",
     "dependencies": {
         "node-fetch": "^2.6.7"
-    }
+    },
+    "types": "./index.d.ts"
 }

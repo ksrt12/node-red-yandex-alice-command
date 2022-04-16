@@ -2,6 +2,8 @@
 
 The original repo is owned by [@AntonTumilovich](https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command)
 
+The original npm module is [node-red-contrib-yandex-alice-command](https://www.npmjs.com/package/node-red-contrib-yandex-alice-command)
+
 ## Nodes:
 
 -   alice-send Send voice command or text to speach to any Yandex.Alice speakers.
