@@ -5,19 +5,19 @@ const https = require("https");
 const { is, checkStatus, creds } = require("./functions");
 
 /** @type {getCookies} */
-module.exports = async ({ forceCreds, RED, id, SetStatus, SetError }) => {
+module.exports = async ({ forceCreds, RED, id, SetStatus, SetError, Debug_Log }) => {
 
     let topic = "Get cookies";
 
     const getCredentials = () => creds.getCredentialsRED({ RED, id });
-    const updateCredentials = (newCreds) => creds.updateCredentialsRED({ RED, id, newCreds });
+    const updateCredentials = (/** @type {aliceCredsAdd} */ newCreds) => creds.updateCredentialsRED({ RED, id, newCreds });
 
     /** @type {aliceCreds} */
-    let currCreds = forceCreds || getCredentials();
-    let { username, password, cookies } = currCreds;
+    let { username, password } = forceCreds || getCredentials();
+    let cookies = "";
 
     const agent = new https.Agent({ keepAlive: true });
-    const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36";
+    const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
 
     SetStatus("blue", "ring", topic, "init");
     let { csrf_token, process_uuid } = await fetch("https://passport.yandex.ru/auth?repath=https://yandex.ru",
@@ -32,7 +32,7 @@ module.exports = async ({ forceCreds, RED, id, SetStatus, SetError }) => {
             let yaheaders = res.headers.raw();
             yaheaders['set-cookie'].forEach(tmp => {
                 let tmp_cookie = tmp.substring(0, tmp.indexOf('; ')) + ";";
-                if (tmp_cookie.length > 8) {
+                if (is(tmp_cookie, 4)) {
                     cookies += tmp_cookie;
                 }
             });
@@ -117,7 +117,7 @@ module.exports = async ({ forceCreds, RED, id, SetStatus, SetError }) => {
                         let headers = password_res.headers.raw();
                         headers['set-cookie'].forEach(tmp => {
                             let tmp_cookie = tmp.substring(0, tmp.indexOf('; ')) + ";";
-                            if (tmp_cookie.length > 4) {
+                            if (is(tmp_cookie, 4)) {
                                 cookies += tmp_cookie;
                             }
                         });
@@ -127,9 +127,9 @@ module.exports = async ({ forceCreds, RED, id, SetStatus, SetError }) => {
                     }
                 })
                 .catch(err => SetError(topic, err));
-            /////////////// GET COOKIES End //////////////
 
             if (is(final_cookies, 200)) {
+                Debug_Log("Куки получены!");
                 SetStatus("blue", "dot", topic, "ok");
                 updateCredentials({ cookies: final_cookies });
                 return final_cookies;

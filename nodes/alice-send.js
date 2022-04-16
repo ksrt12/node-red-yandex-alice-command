@@ -42,7 +42,7 @@ module.exports = function (/** @type {RED} */ RED) {
         const defFunc = { SetStatus, SetError, Debug_Log };
 
         const getCreds = () => creds.getCredentialsRED({ RED, id: node.login });
-        const updateCreds = newCreds => {
+        const updateCreds = (/** @type {aliceCredsAdd} */ newCreds) => {
             creds.updateCredentialsRED({ RED, id: node.login, newCreds });
             Object.entries(newCreds).forEach(([key, val]) => {
                 Debug_Log(`The value of ${key} has been set to ${val}. Update alice-login manual.`);
@@ -132,7 +132,6 @@ module.exports = function (/** @type {RED} */ RED) {
 
                 if (!is_cookies_set) {
                     cookies = await getCookies({ RED, id: node.login, ...defFunc });
-                    Debug_Log("Куки получены!");
                 }
 
                 if (is(cookies)) {
@@ -144,8 +143,12 @@ module.exports = function (/** @type {RED} */ RED) {
                     /** @type {defFetchGet} */
                     const defFetchGet = { headers: { "Cookie": cookies }, ...defFunc };
                     /** @type {defFetchPost} */
-                    const defFetchPost = defFetchGet;
-                    defFetchPost.headers['x-csrf-token'] = csrf_token;
+                    const defFetchPost = {
+                        headers: {
+                            "Cookie": cookies,
+                            'x-csrf-token': csrf_token
+                        }, ...defFunc
+                    };
 
                     if (!is_speaker_set) {
 

@@ -25,6 +25,12 @@ npm install *full path to cloned repo folder*
 
 ## Changelog
 
+Version 2.0.3 17/04/22:
+
+-   Define some types
+-   Fix undefined var cookies in getCookies
+-   Update Chrome UserAgent
+
 Version 2.0.2 14/04/22:
 
 -   Move some code out of async function

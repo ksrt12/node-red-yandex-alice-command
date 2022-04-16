@@ -115,6 +115,25 @@ interface device {
     item_type: string;
     groups: string[];
 }
+interface group {
+    id: string;
+    name: string;
+    type: string;
+    icon_url: string;
+    state: string;
+    capabilities: {
+        reportable: boolean;
+        retrievable: boolean;
+        type: string;
+        parameters: { split: boolean; };
+        state: {
+            instance: string;
+            value: boolean;
+        };
+        last_updated: number;
+    }[];
+    devices_count: number;
+}
 
 interface ansDevices extends ansBase {
     rooms: {
@@ -122,9 +141,9 @@ interface ansDevices extends ansBase {
         name: string;
         devices: device[];
     }[];
-    groups: any[];
+    groups: group[];
     unconfigured_devices: any[];
-    speakers: any[];
+    speakers: device[];
 }
 
 interface capability {
@@ -189,4 +208,5 @@ interface myFetchParams extends fetchPutPostParams {
     color: NodeStatusFill;
     method: "GET" | "PUT" | "POST";
 }
-type myFetch = arrowPromise<myFetchParams, ansGet | ansBase>;
+type ansFetch = ansGet | ansBase;
+type myFetch = arrowPromise<myFetchParams, ansFetch>;
