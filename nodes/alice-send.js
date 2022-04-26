@@ -39,8 +39,10 @@ module.exports = function (/** @type {RED} */ RED) {
             node.send(status);
         };
 
+        const ClearStatus = () => node.status({});
+
         /** @type {defFuncs} */
-        const defFunc = { SetStatus, SetError, Debug_Log };
+        const defFunc = { ClearStatus, SetStatus, SetError, Debug_Log };
 
         /** @type {Icreds} */
         const creds = {
@@ -73,7 +75,7 @@ module.exports = function (/** @type {RED} */ RED) {
                 ...defFunc
             });
 
-            node.status({}); // clean
+            ClearStatus(); // clean
 
             async function make_action() {
 
@@ -264,7 +266,7 @@ module.exports = function (/** @type {RED} */ RED) {
                             });
 
                             await sleep(500);
-                            node.status({});
+                            ClearStatus();
                         }
                         // is scenario ok
                     }

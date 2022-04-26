@@ -29,6 +29,7 @@ type FuncSetStatus = (color: NodeStatusFill, shape: NodeStatusShape, topic: stri
 type FuncSetError = (topic: string, status: string) => void;
 
 interface defFuncs {
+    ClearStatus: () => void;
     SetStatus: FuncSetStatus;
     SetError: FuncSetError;
     Debug_Log: FuncLog;
