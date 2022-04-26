@@ -58,11 +58,27 @@ interface IcredsRED {
     get: arrowFunc<getCreds, aliceCreds>;
     update: arrowFunc<updateCreds, void>;
 }
-
 interface Icreds {
     get: () => aliceCreds;
     update: (newCreds: aliceCredsAdd) => void;
 }
+
+type command_type = "tts" | "cmd";
+interface prev_state {
+    text: string;
+    is_cmd: boolean;
+}
+interface checkCmdParams {
+    command_type: command_type | "json";
+    data: string | number | {
+        type: command_type;
+        text: string;
+    };
+    previous: prev_state;
+    SetError: FuncSetError;
+}
+interface checkCmdOut extends prev_state { should_update: boolean; }
+type checkCmd = arrowFunc<checkCmdParams, checkCmdOut>;
 
 interface getCookiesParams extends defFuncs { creds: Icreds; }
 type getCookies = arrowPromise<getCookiesParams, string>;

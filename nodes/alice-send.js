@@ -1,6 +1,6 @@
 "use strict";
 
-const { is, credsRED } = require("../utils/functions");
+const { is, credsRED, checkCmd } = require("../utils/functions");
 const getCookies = require("../utils/getCookies");
 const getCSRF = require("../utils/getCSRF");
 const myFetch = require("../utils/myFetch");
@@ -12,9 +12,10 @@ module.exports = function (/** @type {RED} */ RED) {
         RED.nodes.createNode(this, config);
 
         this.login = config.login;
-        /** @type {RedNode} */
+        /** @type {RedNodeLogin} */
         this.login_node = RED.nodes.getNode(this.login);
-        this.command_type = config.command_type;
+        /** @type {command_type} */
+        let command_type = config.command_type;
 
         /** @type {RedNodeAlice} */
         let node = this;
@@ -95,39 +96,12 @@ module.exports = function (/** @type {RED} */ RED) {
 
         node.on('input', function (msg) {
 
-            let text = '';
-            let is_cmd = false;
-            let should_update = false;
-            let force_stop = false;
-
-            switch (node.command_type) {
-                case 'tts':
-                    text = String(msg.payload);
-                    break;
-                case 'cmd':
-                    text = String(msg.payload);
-                    is_cmd = true;
-                    break;
-                case 'json':
-                    /** @type {{type: string, text: string}} */
-                    let json_data = msg.payload;
-                    if (typeof json_data !== "object") {
-                        SetError("Wrong JSON format");
-                        force_stop = true;
-                    } else {
-                        is_cmd = (json_data.type === 'cmd');
-                        text = json_data.text;
-                    }
-                    break;
-            }
-
-            text ||= 'Ошибка';
-
-            if (text !== node.previous.text || is_cmd !== node.previous.is_cmd) {
-                node.previous.text = RED.util.cloneMessage(text);
-                node.previous.is_cmd = RED.util.cloneMessage(is_cmd);
-                should_update = true;
-            }
+            let { text, is_cmd, should_update } = checkCmd({
+                command_type,
+                data: msg.payload,
+                previous: node.previous,
+                ...defFunc
+            });
 
             node.status({}); // clean
 
@@ -329,9 +303,7 @@ module.exports = function (/** @type {RED} */ RED) {
                 // is cookies ok
             }
 
-            if (!force_stop) {
-                make_action().then();
-            }
+            make_action().then();
         }); //// end node
 
     };
