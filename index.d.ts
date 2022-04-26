@@ -52,12 +52,19 @@ interface getCreds {
 }
 
 interface aliceCreds extends aliceCredsBase, aliceCredsAdd { }
-type getCredentials = arrowFunc<getCreds, aliceCreds>;
-
 interface updateCreds extends getCreds { newCreds: aliceCreds; }
-type updateCredentials = arrowFunc<updateCreds, void>;
 
-interface getCookiesParams extends defFuncs { forceCreds?: aliceCreds | undefined; }
+interface IcredsRED {
+    get: arrowFunc<getCreds, aliceCreds>;
+    update: arrowFunc<updateCreds, void>;
+}
+
+interface Icreds {
+    get: () => aliceCreds;
+    update: (newCreds: aliceCredsAdd) => void;
+}
+
+interface getCookiesParams extends defFuncs { creds: Icreds; }
 type getCookies = arrowPromise<getCookiesParams, string>;
 
 interface defFetchGet extends defFuncs { headers: { Cookie: string; }; }

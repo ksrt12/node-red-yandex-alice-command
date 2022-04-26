@@ -2,15 +2,13 @@
 
 module.exports = {
 
-    creds: {
-        /** @type {getCredentials} */
-        getCredentialsRED({ RED, id }) {
+    /** @type {IcredsRED} */
+    credsRED: {
+        get({ RED, id }) {
             return RED.nodes.getCredentials(id);
         },
-
-        /** @type {updateCredentials} */
-        updateCredentialsRED({ RED, id, newCreds }) {
-            let oldCreds = this.getCredentialsRED({ RED, id });
+        update({ RED, id, newCreds }) {
+            let oldCreds = this.get({ RED, id });
             RED.nodes.addCredentials(id, { ...oldCreds, ...newCreds });
         }
     },

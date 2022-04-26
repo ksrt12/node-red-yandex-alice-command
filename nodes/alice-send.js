@@ -1,6 +1,6 @@
 "use strict";
 
-const { is, creds } = require("../utils/functions");
+const { is, credsRED } = require("../utils/functions");
 const getCookies = require("../utils/getCookies");
 const getCSRF = require("../utils/getCSRF");
 const myFetch = require("../utils/myFetch");
@@ -41,12 +41,17 @@ module.exports = function (/** @type {RED} */ RED) {
         /** @type {defFuncs} */
         const defFunc = { SetStatus, SetError, Debug_Log };
 
-        const getCreds = () => creds.getCredentialsRED({ RED, id: node.login });
-        const updateCreds = (/** @type {aliceCredsAdd} */ newCreds) => {
-            creds.updateCredentialsRED({ RED, id: node.login, newCreds });
-            Object.entries(newCreds).forEach(([key, val]) => {
-                Debug_Log(`The value of ${key} has been set to ${val}. Update alice-login manual.`);
-            });
+        /** @type {Icreds} */
+        const creds = {
+            get() {
+                return credsRED.get({ RED, id: node.login });
+            },
+            update(newCreds) {
+                credsRED.update({ RED, id: node.login, newCreds });
+                Object.keys(newCreds).forEach(key => {
+                    Debug_Log(`The value of ${key} has been set. Update alice-login manual.`);
+                });
+            }
         };
 
         /** @type {string[]} */
@@ -54,7 +59,7 @@ module.exports = function (/** @type {RED} */ RED) {
         let scenario_name = node.login_node.scenario_name.replace(new RegExp('"', 'g'), '') || "Голос";
         let is_debug = node.login_node.debug_enable;
 
-        let { cookies, speaker_id, scenario_id } = getCreds();
+        let { cookies, speaker_id, scenario_id } = creds.get();
 
         const yiot = "https://iot.quasar.yandex.ru/m/user";
 
@@ -211,7 +216,7 @@ module.exports = function (/** @type {RED} */ RED) {
                         if (speakers_length > 1) {
                             if (is_debug) Debug_Log(`There are ${speakers_length} speakers`);
                         }
-                        if (!is_speaker_set) updateCreds({ speaker_id: speaker_id_all[0] });
+                        if (!is_speaker_set) creds.update({ speaker_id: speaker_id_all[0] });
                         speaker_id_all.forEach(id => {
                             if (is_debug) Debug_Log("Configure speaker " + id);
                             scenario_template.steps[0].parameters.launch_devices.push({
@@ -262,7 +267,7 @@ module.exports = function (/** @type {RED} */ RED) {
                             // Verify Scenario
                             if (is(scenario_id)) {
                                 is_fail_scenario = false;
-                                if (!is_scenario_set) updateCreds({ scenario_id });
+                                if (!is_scenario_set) creds.update({ scenario_id });
                             } else {
                                 is_fail_scenario = true;
                             }

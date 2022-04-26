@@ -2,18 +2,15 @@
 
 const fetch = require("node-fetch");
 const https = require("https");
-const { is, checkStatus, creds } = require("./functions");
+const { is, checkStatus } = require("./functions");
 
 /** @type {getCookies} */
-module.exports = async ({ forceCreds, RED, id, SetStatus, SetError, Debug_Log }) => {
+module.exports = async ({ creds, SetStatus, SetError, Debug_Log }) => {
 
     let topic = "Get cookies";
 
-    const getCredentials = () => creds.getCredentialsRED({ RED, id });
-    const updateCredentials = (/** @type {aliceCredsAdd} */ newCreds) => creds.updateCredentialsRED({ RED, id, newCreds });
-
     /** @type {aliceCreds} */
-    let { username, password } = forceCreds || getCredentials();
+    let { username, password } = creds.get();
     let cookies = "";
 
     const agent = new https.Agent({ keepAlive: true });
@@ -131,7 +128,7 @@ module.exports = async ({ forceCreds, RED, id, SetStatus, SetError, Debug_Log })
             if (is(final_cookies, 200)) {
                 Debug_Log("Куки получены!");
                 SetStatus("blue", "dot", topic, "ok");
-                updateCredentials({ cookies: final_cookies });
+                creds.update({ cookies: final_cookies });
                 return final_cookies;
             }
             // password ok
