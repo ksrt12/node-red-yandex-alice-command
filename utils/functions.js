@@ -1,5 +1,7 @@
 "use strict";
 
+const is = (/** @type {string}*/ str, length = 1) => (str && str.length > length);
+
 module.exports = {
 
     /** @type {IcredsRED} */
@@ -23,6 +25,5 @@ module.exports = {
         }
     },
 
-    /** @type {(str: string, length?: number) => boolean} */
-    is: (str, length = 1) => (str && str.length > length)
+    is
 };
