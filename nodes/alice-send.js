@@ -1,6 +1,6 @@
 "use strict";
 
-const { is, credsRED, checkCmd } = require("../utils/functions");
+const { is, credsRED, checkCmd, checkVars } = require("../utils/functions");
 const getCookies = require("../utils/getCookies");
 const getCSRF = require("../utils/getCSRF");
 const myFetch = require("../utils/myFetch");
@@ -56,43 +56,13 @@ module.exports = function (/** @type {RED} */ RED) {
         };
 
         /** @type {string[]} */
-        let speaker_id_all = [];
         let scenario_name = node.login_node.scenario_name.replace(new RegExp('"', 'g'), '') || "Голос";
         let is_debug = node.login_node.debug_enable;
 
-        let { cookies, speaker_id, scenario_id } = creds.get();
-
         const yiot = "https://iot.quasar.yandex.ru/m/user";
 
-        let is_cookies_set = false;
-        let is_speaker_set = false;
-        let is_scenario_set = false;
-
-        let is_fail_scenario = false;
-        let is_fail_speaker = false;
-
-        if (is(cookies)) {
-            is_cookies_set = true;
-            cookies = cookies.replace(new RegExp('"', 'g'), '');
-        }
-
-        if (is(scenario_id)) {
-            is_scenario_set = true;
-            scenario_id = scenario_id
-                .replace(new RegExp('"', 'g'), '')
-                .replace(new RegExp(' ', 'g'), '');
-        }
-
-        if (is(speaker_id)) {
-            is_speaker_set = true;
-            speaker_id = speaker_id
-                .replace(new RegExp('"', 'g'), '')
-                .replace(new RegExp(' ', 'g'), '|')
-                .replace(new RegExp(',', 'g'), '|')
-                .replace(new RegExp(';', 'g'), '|');
-
-            speaker_id_all = speaker_id.split('|').filter(i => i.length > 0);
-        }
+        let { cookies, speaker_id_all, scenario_id,
+            is_cookies_set, is_speaker_set, is_scenario_set } = checkVars(creds.get());
 
         node.on('input', function (msg) {
 

@@ -15,6 +15,45 @@ module.exports = {
         }
     },
 
+    /** @type {checkVars} */
+    checkVars({ cookies, scenario_id, speaker_id }) {
+        let is_cookies_set = false;
+        let is_speaker_set = false;
+        let is_scenario_set = false;
+        let speaker_id_all = [];
+
+        if (is(cookies)) {
+            is_cookies_set = true;
+            cookies = cookies.replace(new RegExp('"', 'g'), '');
+        }
+
+        if (is(scenario_id)) {
+            is_scenario_set = true;
+            scenario_id = scenario_id
+                .replace(new RegExp('"', 'g'), '')
+                .replace(new RegExp(' ', 'g'), '');
+        }
+
+        if (is(speaker_id)) {
+            is_speaker_set = true;
+            speaker_id = speaker_id
+                .replace(new RegExp('"', 'g'), '')
+                .replace(new RegExp(' ', 'g'), '|')
+                .replace(new RegExp(',', 'g'), '|')
+                .replace(new RegExp(';', 'g'), '|');
+
+            speaker_id_all = speaker_id.split('|').filter(i => i.length > 0);
+        }
+        return {
+            is_cookies_set,
+            is_speaker_set,
+            is_scenario_set,
+            cookies,
+            scenario_id,
+            speaker_id_all
+        };
+    },
+
     /** @type {(req: Response) => Response | Error} */
     checkStatus(req) {
         const status = req.status;
@@ -24,7 +63,6 @@ module.exports = {
             throw status;
         }
     },
-
 
     /** @type {checkCmd} */
     checkCmd({ command_type, data, previous, SetError }) {

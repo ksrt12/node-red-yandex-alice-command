@@ -63,6 +63,14 @@ interface Icreds {
     update: (newCreds: aliceCredsAdd) => void;
 }
 
+interface checkVarsOut extends aliceCredsAdd {
+    is_cookies_set: boolean;
+    is_speaker_set: boolean;
+    is_scenario_set: boolean;
+    speaker_id_all: string[];
+}
+type checkVars = arrowFunc<aliceCredsAdd, checkVarsOut>;
+
 type command_type = "tts" | "cmd";
 interface prev_state {
     text: string;
