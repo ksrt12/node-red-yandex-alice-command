@@ -2,6 +2,7 @@
 
 const { credsRED, checkCmd, checkVars } = require("../utils/functions");
 const makeAction = require("../utils/makeAction");
+const { DefFunc, AliceCreds } = require("../utils/classes");
 
 module.exports = function (/** @type {RED} */ RED) {
 
@@ -18,45 +19,14 @@ module.exports = function (/** @type {RED} */ RED) {
         let node = this;
         node.previous = { text: null, is_cmd: null };
 
-        /** @type {FuncLog} */
-        const Debug_Log = msg_text => {
-            node.log(msg_text);
-            node.send({ payload: msg_text });
-        };
-
-        /** @type {FuncSetStatus} */
-        const SetStatus = (color, shape, topic, status) => {
-            node.status({ fill: color, shape: shape, text: topic });
-            if (is_debug) Debug_Log(topic + ": " + status);
-        };
-
-        /** @type {FuncSetError} */
-        const SetError = (topic, status) => {
-            SetStatus("red", "dot", topic, "fail: " + status);
-            node.send(status);
-        };
-
-        const ClearStatus = () => node.status({});
-
-        /** @type {defFuncs} */
-        const defFunc = { ClearStatus, SetStatus, SetError, Debug_Log };
-
-        /** @type {Icreds} */
-        const creds = {
-            get() {
-                return credsRED.get({ RED, id: node.login });
-            },
-            update(newCreds) {
-                credsRED.update({ RED, id: node.login, newCreds });
-                Object.keys(newCreds).forEach(key => {
-                    Debug_Log(`The value of ${key} has been set. Update alice-login manual.`);
-                });
-            }
-        };
-
         /** @type {string[]} */
         let scenario_name = node.login_node.scenario_name.replace(new RegExp('"', 'g'), '') || "Голос";
         let is_debug = node.login_node.debug_enable;
+
+        const defFunc = new DefFunc(node, is_debug);
+
+        /** @type {Icreds} */
+        const creds = new AliceCreds(RED, node.login, defFunc.Debug_Log);
 
         let { cookies, speaker_id_all, scenario_id,
             is_cookies_set, is_speaker_set, is_scenario_set } = checkVars(creds.get());
@@ -70,7 +40,7 @@ module.exports = function (/** @type {RED} */ RED) {
                 ...defFunc
             });
 
-            ClearStatus(); // clean
+            defFunc.ClearStatus(); // clean
 
             makeAction(
                 creds,

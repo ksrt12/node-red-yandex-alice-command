@@ -9,7 +9,7 @@ module.exports = async ({ creds, SetStatus, SetError, Debug_Log }) => {
 
     let topic = "Get cookies";
 
-    /** @type {aliceCreds} */
+    /** @type {aliceCredsBase} */
     let { username, password } = creds.get();
     let cookies = "";
 

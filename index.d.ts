@@ -47,20 +47,10 @@ interface aliceCredsAdd {
     scenario_id?: string;
     speaker_id?: string;
 }
-interface getCreds {
-    RED?: RED;
-    id?: string;
-}
+interface aliceCredsFull extends aliceCredsBase, aliceCredsAdd { }
 
-interface aliceCreds extends aliceCredsBase, aliceCredsAdd { }
-interface updateCreds extends getCreds { newCreds: aliceCreds; }
-
-interface IcredsRED {
-    get: arrowFunc<getCreds, aliceCreds>;
-    update: arrowFunc<updateCreds, void>;
-}
 interface Icreds {
-    get: () => aliceCreds;
+    get: () => aliceCredsFull;
     update: (newCreds: aliceCredsAdd) => void;
 }
 
