@@ -232,3 +232,5 @@ interface myFetchParams extends fetchPutPostParams {
 }
 type ansFetch = ansGet | ansBase;
 type myFetch = arrowPromise<myFetchParams, ansFetch>;
+
+type aliceSend = (myCreds: aliceCredsFull, scenario_name: string, command_type: command_type, data: string | number, is_debug?: boolean) => void;

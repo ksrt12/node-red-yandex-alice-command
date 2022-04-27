@@ -1,19 +1,19 @@
-# Node-RED nodes for send command and tts to Yandex Alice
+# Node-RED node for send command and tts to Yandex Alice
 
 The original repo is owned by [@AntonTumilovich](https://github.com/AntonTumilovich/https-flows.nodered.org-node-node-red-contrib-yandex-alice-command)
 
 The original npm module is [node-red-contrib-yandex-alice-command](https://www.npmjs.com/package/node-red-contrib-yandex-alice-command)
 
-## Nodes:
+## Nodes
 
 -   alice-send Send voice command or text to speach to any Yandex.Alice speakers.
 
-## Examples:
+## Examples
 
 -   https://www.youtube.com/watch?v=kY6g7x9B-PU
 -   https://www.youtube.com/watch?v=ldF4b11SaiQ
 
-## Installation:
+## Installation
 
 ```
 npm install node-red-contrib-yandex-alice-command
@@ -26,6 +26,12 @@ npm install *full path to cloned repo folder*
 ```
 
 ## Changelog
+
+Version 2.0.4 27/04/22:
+
+-   Move some code to separate files
+-   Rewrite some functions as classses
+-   Write index.js
 
 Version 2.0.3 17/04/22:
 
@@ -125,23 +131,9 @@ Version 1.0.5 14/06/20:
 -   Added Status messages
 -   Fixed Set node name
 
-THNAKS TO:
-
--   https://github.com/AlexxIT/YandexStation
--   https://github.com/sergejey/majordomo-yadevices
--   Artem https://github.com/guinmoon
-
-Если вам понравился проект - линк для благодарностей https://yasobe.ru/na/ya_alice_command
-
-<img src="http://wiki.swiitch.ru/images/3/3e/Node_red_yandex_alice.png">
-<img src="http://wiki.swiitch.ru/images/d/d0/Node_red_yandex_alice_get_token.png">
-<img src="http://wiki.swiitch.ru/images/c/c1/Node_red_yandex_alice_settings.png">
-<img src="http://wiki.swiitch.ru/images/8/8c/Node_red_yandex_alice_login.png">
-  
-  
-  
 Альтернативный способ получения Cookies:
+
 1. Зайти на https://yandex.ru/quasar/iot
 2. Открыть панель разработчика
 3. Найти запрос к странице и там взять отправленные cookies
-<img src="http://wiki.swiitch.ru/images/6/66/Node_red_yandex_alice_get_cookies_alt.png">
+   <img src="http://wiki.swiitch.ru/images/6/66/Node_red_yandex_alice_get_cookies_alt.png">

@@ -23,9 +23,9 @@
         "type": "git",
         "url": "git+https://github.com/ksrt12/node-red-yandex-alice-command.git"
     },
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "yandex-alice-command system",
-    "main": "",
+    "main": "./index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
