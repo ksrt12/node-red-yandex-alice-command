@@ -1,6 +1,6 @@
 "use strict";
 
-const localFetch = (process.versions.node >= "18.0.0") ? fetch : require("node-fetch");
+const fetch = require("node-fetch");
 const { checkStatus } = require("./functions");
 
 /** @type {myFetch} */
@@ -10,7 +10,7 @@ const general = async ({ color, topic, url, method, headers, body, SetStatus, Se
     if (body) {
         opt.body = body;
     }
-    return await localFetch(url, opt)
+    return await fetch(url, opt)
         .then(checkStatus)
         .then((/** @type {Response} */ res) => res.json())
         .then((/** @type {ansFetch}*/ ans) => {
