@@ -111,6 +111,10 @@ module.exports = async ({ creds, SetStatus, SetError, Debug_Log }) => {
                 })
                 .then(res => {
                     if (res.status === 'ok') {
+                        if (res.state === "auth_challenge") {
+                            Debug_Log("Дальнейшая авторизация невозможна без проверки номера телефона. Скопируте куки по инструкции");
+                            throw "Авторизация по телефону!";
+                        }
                         let headers = password_res.headers.raw();
                         headers['set-cookie'].forEach(tmp => {
                             let tmp_cookie = tmp.substring(0, tmp.indexOf('; ')) + ";";

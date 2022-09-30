@@ -16,7 +16,7 @@ The original npm module is [node-red-contrib-yandex-alice-command](https://www.n
 ## Installation
 
 ```
-npm install node-red-contrib-yandex-alice-command
+npm install @ksrt12/node-red-yandex-alice-command
 ```
 
 or clone repo to any place and then
@@ -26,6 +26,10 @@ npm install *full path to cloned repo folder*
 ```
 
 ## Changelog
+
+Version 2.0.5 01/10/22:
+
+-   Catch authorization error
 
 Version 2.0.4 27/04/22:
 

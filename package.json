@@ -23,7 +23,7 @@
         "type": "git",
         "url": "git+https://github.com/ksrt12/node-red-yandex-alice-command.git"
     },
-    "version": "2.0.4",
+    "version": "2.0.5",
     "description": "yandex-alice-command system",
     "main": "./index.js",
     "scripts": {
