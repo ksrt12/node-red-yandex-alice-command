@@ -1,6 +1,5 @@
 "use strict";
 
-const fetch = require("node-fetch");
 const https = require("https");
 const { is, checkStatus } = require("./functions");
 

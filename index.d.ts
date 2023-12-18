@@ -21,9 +21,6 @@ interface RedNodeAlice extends RedNode {
     };
 }
 
-type Body = import("node-fetch").Body;
-type Response = import("node-fetch").Response;
-
 type FuncLog = (msg_text: string) => void;
 type FuncSetStatus = (color: NodeStatusFill, shape: NodeStatusShape, topic: string, status: string) => void;
 type FuncSetError = (topic: string, status: string) => void;
@@ -192,7 +189,7 @@ interface step {
         }[];
         requested_speaker_capabilities: any[];
     };
-};
+}
 interface scenario {
     id?: string;
     name: string;

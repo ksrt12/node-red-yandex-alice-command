@@ -27,6 +27,10 @@ npm install *full path to cloned repo folder*
 
 ## Changelog
 
+Version 2.1.0 18/12/23:
+
+-   Use built-in node fetch instead of external module
+
 Version 2.0.5 01/10/22:
 
 -   Catch authorization error

@@ -1,6 +1,5 @@
 "use strict";
 
-const fetch = require("node-fetch");
 const { checkStatus } = require("./functions");
 
 /** @type {myFetch} */
